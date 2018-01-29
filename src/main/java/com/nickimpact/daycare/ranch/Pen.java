@@ -100,4 +100,8 @@ public class Pen {
 				return Optional.ofNullable(this.slot2);
 		}
 	}
+
+	public Optional<Pokemon> getEgg() {
+		return Optional.ofNullable(this.egg);
+	}
 }

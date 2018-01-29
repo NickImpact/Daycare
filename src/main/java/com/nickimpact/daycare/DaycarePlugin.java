@@ -6,8 +6,10 @@ import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.nickimpact.daycare.api.configuration.AbstractConfig;
 import com.nickimpact.daycare.api.configuration.ConfigBase;
+import com.nickimpact.daycare.api.text.Tokens;
 import com.nickimpact.daycare.commands.DaycareCmd;
 import com.nickimpact.daycare.configuration.DaycareConfigAdapter;
+import com.nickimpact.daycare.internal.TextParsingUtils;
 import com.nickimpact.daycare.listeners.ConnectionListener;
 import com.nickimpact.daycare.ranch.Ranch;
 import com.nickimpact.daycare.storage.Storage;
@@ -72,6 +74,9 @@ public class DaycarePlugin {
 
 	private List<Ranch> ranches = Lists.newArrayList();
 
+	/** An internal provider set to help decode variables in strings */
+	private TextParsingUtils textParsingUtils = new TextParsingUtils();
+
 	@Listener
 	public void onInit(GameInitializationEvent e) {
 		instance = this;
@@ -83,6 +88,9 @@ public class DaycarePlugin {
 		this.config.init();
 		this.msgConfig = new AbstractConfig(this, new DaycareConfigAdapter(this), "assets/messages.conf");
 		this.msgConfig.init();
+
+		getConsole().ifPresent(console -> console.sendMessages(Text.of(PluginInfo.PREFIX, "Integrating with Nucleus Token Service...")));
+		new Tokens();
 
 		getConsole().ifPresent(console -> console.sendMessages(Text.of(PluginInfo.PREFIX, "Initializing commands...")));
 		new DaycareCmd().register();
