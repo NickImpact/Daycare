@@ -1,7 +1,10 @@
 buildscript {
     repositories {
         jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
@@ -10,12 +13,19 @@ buildscript {
 
 plugins {
     id 'com.qixalite.spongestart' version '1.6.2'
+    id 'maven'
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
+version '0.8.0-BETA'
 
 group 'com.nickimpact.daycare'
-version '0.0.1'
+
+ext {
+    pluginversion = '0.8.0-BETA'
+    spongeapiversion = '7.1.0-SNAPSHOT'
+    completeversion = "S${spongeapiversion.substring(0, 5)}-${pluginversion}"
+}
 
 sourceCompatibility = targetCompatibility = "1.8" // Need this here so eclipse task generates correctly.
 compileJava {
@@ -23,9 +33,9 @@ compileJava {
 }
 
 minecraft {
-    version = "1.12.2-14.23.1.2555"
+    version = "1.12.2-14.23.1.2587"
     runDir = "run"
-    mappings = "snapshot_20170919"
+    mappings = "snapshot_20171007"
     useDepAts = true
 }
 
@@ -48,10 +58,15 @@ repositories {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
-    compile 'org.spongepowered:spongeapi:7.0.0'
-    compile "org.projectlombok:lombok:1.16.10"
-    compile group: 'com.zaxxer', name: 'HikariCP', version: '2.5.1'
+    compileOnly fileTree(dir: 'libs', include: '*.jar')
+    compileOnly 'org.spongepowered:spongeapi:7.0.0'
+    compileOnly "org.projectlombok:lombok:1.16.10"
+    compileOnly group: 'com.zaxxer', name: 'HikariCP', version: '2.5.1'
+    testCompile "junit:junit:4.11"
+}
+
+jar {
+    archiveName = "Daycare-${completeversion}.jar"
 }
 
 //Fix forges AT breaking everything because the AT checker is stupid

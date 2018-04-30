@@ -5,6 +5,7 @@ import com.nickimpact.daycare.DaycarePlugin;
 import com.nickimpact.daycare.api.text.Translator;
 import com.nickimpact.daycare.ranch.Pokemon;
 import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 
 import java.util.Map;
@@ -31,6 +32,9 @@ public class PokemonTokens {
 		)));
 		tokens.put("gender", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
 				getPokemonFromVariableIfExists(m), EnumPokemonFields.GENDER
+		)));
+		tokens.put("gender_icon", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
+				getPokemonFromVariableIfExists(m), EnumPokemonFields.GENDER_ICON
 		)));
 		tokens.put("nature", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
 				getPokemonFromVariableIfExists(m), EnumPokemonFields.NATURE
@@ -95,11 +99,8 @@ public class PokemonTokens {
 		tokens.put("shiny", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
 				getPokemonFromVariableIfExists(m), EnumPokemonFields.SHINY
 		)));
-		tokens.put("halloween", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
-				getPokemonFromVariableIfExists(m), EnumPokemonFields.HALLOWEEN
-		)));
-		tokens.put("roasted", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
-				getPokemonFromVariableIfExists(m), EnumPokemonFields.ROASTED
+		tokens.put("special_texture", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
+				getPokemonFromVariableIfExists(m), EnumPokemonFields.SPECIAL_TEXTURE
 		)));
 		tokens.put("clones", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
 				getPokemonFromVariableIfExists(m), EnumPokemonFields.CLONES
@@ -119,6 +120,9 @@ public class PokemonTokens {
 		tokens.put("moves_4", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
 				getPokemonFromVariableIfExists(m), EnumPokemonFields.MOVES_4
 		)));
+		tokens.put("held_item", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
+				getPokemonFromVariableIfExists(m), EnumPokemonFields.HELD_ITEM
+		)));
 		tokens.put("ivs_stat", (p, v, m) -> {
 			if(getPokemonFromVariableIfExists(m) != null) {
 				return Optional.of(Text.of("IV"));
@@ -133,6 +137,22 @@ public class PokemonTokens {
 
 			return Optional.empty();
 		});
+		tokens.put("gained_lvls", (p, v, m) -> {
+			Pokemon pokemon = getPokemonObjFromVariableIfExists(m);
+			if(pokemon == null) {
+				return Optional.empty();
+			}
+
+			return Optional.of(Text.of("+", pokemon.getGainedLvls()));
+		});
+		tokens.put("calced_lvl", (p, v, m) -> {
+			Pokemon pokemon = getPokemonObjFromVariableIfExists(m);
+			if(pokemon == null) {
+				return Optional.empty();
+			}
+
+			return Optional.of(Text.of(pokemon.getPokemon().getLvl().getLevel() + pokemon.getGainedLvls()));
+		});
 	}
 
 	public static Map<String, Translator> getTokens() {
@@ -140,14 +160,12 @@ public class PokemonTokens {
 	}
 
 	private static EntityPixelmon getPokemonFromVariableIfExists(Map<String, Object> m) {
-		Optional<Object> optPoke = m.values().stream().filter(val -> val instanceof Pokemon || val instanceof EntityPixelmon).findAny();
-		if(optPoke.isPresent()) {
-			if(optPoke.get() instanceof Pokemon)
-				return ((Pokemon) optPoke.get()).getPokemon();
+		Optional<Object> optPoke = m.values().stream().filter(val -> val instanceof EntityPixelmon).findAny();
+		return (EntityPixelmon) optPoke.orElse(null);
+	}
 
-			return (EntityPixelmon) optPoke.get();
-		}
-
-		return null;
+	private static Pokemon getPokemonObjFromVariableIfExists(Map<String, Object> m) {
+		Optional<Object> optPoke = m.values().stream().filter(val -> val instanceof Pokemon).findAny();
+		return (Pokemon) optPoke.orElse(null);
 	}
 }

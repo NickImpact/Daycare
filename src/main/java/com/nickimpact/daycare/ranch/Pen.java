@@ -7,6 +7,7 @@ import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
@@ -27,11 +28,13 @@ public class Pen {
 
 	/** Whether the ranch owner owns this pen */
 	@Getter private boolean unlocked = false;
+	@Getter private Date dateUnlocked;
+	@Getter private BigDecimal price;
 
 	private static final long MAX_WAIT = DaycarePlugin.getInstance().getConfig().get(ConfigKeys.MAX_BREEDING_WAIT_TIME);
 	private static final Random rng = new Random();
 
-	public void unlock() {
+	void unlock() {
 		this.unlocked = true;
 	}
 
@@ -52,7 +55,7 @@ public class Pen {
 	 *
 	 * @return True if two parent pokemon will breed, false otherwise
 	 */
-	public boolean willBreed() {
+	boolean willBreed() {
 		if(!this.isFull() || !this.canBreed()){
 			return false;
 		}
@@ -69,23 +72,7 @@ public class Pen {
 		return false;
 	}
 
-	public String breedChance() {
-		if(slot1 == null && slot2 == null) {
-			return "No pokemon in this pen...";
-		}
-
-		if(slot1 == null || slot2 == null) {
-			return "No available partner";
-		}
-
-		if(!this.canBreed()) {
-			return "Incompatible partners";
-		}
-
-		return String.format("%s and %s love each other!", slot1.getPokemon().getName(), slot2.getPokemon().getName());
-	}
-
-	public Pokemon breed() {
+	Pokemon breed() {
 		EntityPixelmon offspring = new EntityPixelmon(slot1.getPokemon().world);
 		offspring.makeEntityIntoEgg(slot1.getPokemon(), slot2.getPokemon());
 

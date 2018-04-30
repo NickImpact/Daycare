@@ -1,9 +1,11 @@
 package com.nickimpact.daycare.commands;
 
-import com.nickimpact.daycare.DaycarePlugin;
-import com.nickimpact.daycare.api.commands.SpongeCommand;
-import com.nickimpact.daycare.api.commands.annotations.CommandAliases;
+import com.nickimpact.daycare.commands.admin.AdminBaseCmd;
 import com.nickimpact.daycare.ui.RanchUI;
+import com.nickimpact.impactor.api.commands.SpongeCommand;
+import com.nickimpact.impactor.api.commands.annotations.Aliases;
+import com.nickimpact.impactor.api.commands.annotations.Permission;
+import com.nickimpact.impactor.api.plugins.SpongePlugin;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -17,8 +19,13 @@ import org.spongepowered.api.text.Text;
  *
  * @author NickImpact (Nick DeGruccio)
  */
-@CommandAliases({"daycare"})
+@Aliases({"daycare"})
+@Permission
 public class DaycareCmd extends SpongeCommand {
+
+	public DaycareCmd(SpongePlugin plugin) {
+		super(plugin);
+	}
 
 	@Override
 	public CommandElement[] getArgs() {
@@ -37,20 +44,16 @@ public class DaycareCmd extends SpongeCommand {
 
 	@Override
 	public SpongeCommand[] getSubCommands() {
-		return new SpongeCommand[0];
+		return new SpongeCommand[] {
+				new AddCmd(this.plugin),
+				new AdminBaseCmd(this.plugin)
+		};
 	}
 
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
 		if(src instanceof Player) {
-			((Player)src).openInventory(new RanchUI(
-					(Player)src,
-					DaycarePlugin.getInstance()
-							.getRanches()
-							.stream()
-							.filter(ranch -> ranch.getOwnerUUID().equals(((Player) src).getUniqueId()))
-							.findAny().get()
-			).getInventory());
+			new RanchUI((Player)src).open();
 		}
 
 		return CommandResult.success();

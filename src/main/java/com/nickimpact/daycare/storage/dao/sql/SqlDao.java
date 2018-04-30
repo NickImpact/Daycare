@@ -1,9 +1,35 @@
+/*
+ * This file is part of LuckPerms, licensed under the MIT License.
+ *
+ *  Copyright (c) lucko (Luck) <luck@lucko.me>
+ *  Copyright (c) contributors
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ */
+
 package com.nickimpact.daycare.storage.dao.sql;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonSyntaxException;
 import com.nickimpact.daycare.DaycarePlugin;
-import com.nickimpact.daycare.PluginInfo;
+import com.nickimpact.daycare.DaycareInfo;
+import com.nickimpact.daycare.ranch.DaycareNPC;
 import com.nickimpact.daycare.ranch.Ranch;
 import com.nickimpact.daycare.storage.dao.AbstractDao;
 import com.nickimpact.daycare.storage.dao.sql.connection.AbstractConnectionFactory;
@@ -20,11 +46,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-/**
- * (Some note will go here)
- *
- * @author NickImpact
- */
 public class SqlDao extends AbstractDao {
 
 	private static final String ADD_RANCH = "INSERT INTO `{prefix}ranches` VALUES ('%s', '%s')";
@@ -32,7 +53,9 @@ public class SqlDao extends AbstractDao {
 	private static final String GET_RANCH = "SELECT RANCH FROM `{prefix}ranches` WHERE UUID='%s'";
 	private static final String GET_ALL_RANCHES = "SELECT * FROM `{prefix}ranches`";
 	private static final String DELETE_RANCH = "DELETE FROM `{prefix}ranches` WHERE UUID='%s'";
-
+	private static final String ADD_NPC = "INSERT INTO `{prefix}npcs` VALUES ('%s', '%s')";
+	private static final String DELETE_NPC = "DELETE FROM `{prefix}npcs` WHERE UUID='%s'";
+	private static final String GET_NPCS = "SELECT * FROM `{prefix}npcs`";
 
 	@Getter
 	private final AbstractConnectionFactory provider;
@@ -60,52 +83,46 @@ public class SqlDao extends AbstractDao {
 	}
 
 	@Override
-	public void init() {
-		try {
-			provider.init();
+	public void init() throws Exception {
+		provider.init();
 
-			// Init tables
-			if(!tableExists(prefix.apply("{prefix}listings"))) {
-				String schemaFileName = "assets/schema/" + provider.getName().toLowerCase() + ".sql";
-				try (InputStream is = plugin.getResourceStream(schemaFileName)) {
-					if(is == null) {
-						throw new Exception("Couldn't locate schema file for " + provider.getName());
-					}
+		// Init tables
+		if(!tableExists(prefix.apply("{prefix}ranches"))) {
+			String schemaFileName = "schema/" + provider.getName().toLowerCase() + ".sql";
+			try (InputStream is = plugin.getResourceStream(schemaFileName)) {
+				if(is == null) {
+					throw new Exception("Couldn't locate schema file for " + provider.getName());
+				}
 
-					try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-						try (Connection connection = provider.getConnection()) {
-							try (Statement s = connection.createStatement()) {
-								StringBuilder sb = new StringBuilder();
-								String line;
-								while ((line = reader.readLine()) != null) {
-									if (line.startsWith("--") || line.startsWith("#")) continue;
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+					try (Connection connection = provider.getConnection()) {
+						try (Statement s = connection.createStatement()) {
+							StringBuilder sb = new StringBuilder();
+							String line;
+							while ((line = reader.readLine()) != null) {
+								if (line.startsWith("--") || line.startsWith("#")) continue;
 
-									sb.append(line);
+								sb.append(line);
 
-									// check for end of declaration
-									if (line.endsWith(";")) {
-										sb.deleteCharAt(sb.length() - 1);
+								// check for end of declaration
+								if (line.endsWith(";")) {
+									sb.deleteCharAt(sb.length() - 1);
 
-										String result = prefix.apply(sb.toString().trim());
-										if (!result.isEmpty())
-											s.addBatch(result);
+									String result = prefix.apply(sb.toString().trim());
+									if (!result.isEmpty())
+										s.addBatch(result);
 
-										// reset
-										sb = new StringBuilder();
-									}
+									// reset
+									sb = new StringBuilder();
 								}
-								s.executeBatch();
 							}
+							s.executeBatch();
 						}
 					}
 				}
 			}
-		} catch (Exception e) {
-			plugin.getConsole().ifPresent(console -> console.sendMessage(Text.of(
-					PluginInfo.ERROR_PREFIX, "An error occurred whilst initializing the database..."
-			)));
-			e.printStackTrace();
 		}
+
 	}
 
 	@Override
@@ -120,15 +137,16 @@ public class SqlDao extends AbstractDao {
 	private void addOrUpdate(String key, Ranch ranch) {
 		try (Connection connection = provider.getConnection()) {
 			String stmt = prefix.apply(key);
-			stmt = String.format(stmt, ranch.getOwnerUUID(), DaycarePlugin.prettyGson.toJson(ranch));
+			if(key.equals(UPDATE_RANCH)) {
+				stmt = String.format(stmt, DaycarePlugin.prettyGson.toJson(ranch), ranch.getOwnerUUID());
+			} else {
+				stmt = String.format(stmt, ranch.getOwnerUUID(), DaycarePlugin.prettyGson.toJson(ranch));
+			}
 			try (PreparedStatement ps = connection.prepareStatement(stmt)) {
 				ps.executeUpdate();
-				ps.close();
 			}
 		} catch (Exception e) {
-			DaycarePlugin.getInstance().getConsole().ifPresent(console -> console.sendMessage(
-					Text.of(PluginInfo.ERROR_PREFIX, "Something happened during the writing process")
-			));
+			DaycarePlugin.getInstance().getLogger().error(Text.of("Something happened during the writing process"));
 			e.printStackTrace();
 		}
 	}
@@ -150,35 +168,24 @@ public class SqlDao extends AbstractDao {
 			stmt = String.format(stmt, uuid.toString());
 			try (PreparedStatement ps = connection.prepareStatement(stmt)) {
 				ps.executeUpdate();
-				ps.close();
 			}
 		}
 	}
 
 	@Override
 	public Ranch getRanch(UUID uuid) throws Exception {
-		DaycarePlugin.getInstance().getConsole().ifPresent(console -> {
-			console.sendMessage(Text.of(PluginInfo.DEBUG_PREFIX, "Attempting to fetch ranch..."));
-		});
 		try (Connection connection = provider.getConnection()) {
 			String stmt = prefix.apply(GET_RANCH);
 			stmt = String.format(stmt, uuid.toString());
 			try (PreparedStatement query = connection.prepareStatement(stmt)) {
 				ResultSet results = query.executeQuery();
 				if(results.next()) {
-					DaycarePlugin.getInstance().getConsole().ifPresent(console -> {
-						console.sendMessage(Text.of(PluginInfo.DEBUG_PREFIX, "Ranch found!"));
-					});
-
 					Ranch ranch = DaycarePlugin.prettyGson.fromJson(results.getString("ranch"), Ranch.class);
 					results.close();
 					query.close();
 
 					return ranch;
 				} else {
-					DaycarePlugin.getInstance().getConsole().ifPresent(console -> {
-						console.sendMessage(Text.of(PluginInfo.DEBUG_PREFIX, "No ranch found..."));
-					});
 					return null;
 				}
 			}
@@ -203,11 +210,53 @@ public class SqlDao extends AbstractDao {
 					}
 				}
 				results.close();
-				query.close();
 			}
 		}
 
 		return entries;
+	}
+
+	@Override
+	public void addNPC(DaycareNPC npc) throws Exception {
+		try (Connection connection = provider.getConnection()) {
+			String stmt = prefix.apply(ADD_NPC);
+			stmt = String.format(stmt, npc.getUuid(), npc.getName());
+			try (PreparedStatement ps = connection.prepareStatement(stmt)) {
+				ps.executeUpdate();
+			}
+		} catch (Exception e) {
+			DaycarePlugin.getInstance().getLogger().error(Text.of("Something happened during the writing process"));
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void deleteNPC(DaycareNPC npc) throws Exception {
+		try (Connection connection = provider.getConnection()) {
+			String stmt = prefix.apply(DELETE_NPC);
+			stmt = String.format(stmt, npc.getUuid());
+			try (PreparedStatement ps = connection.prepareStatement(stmt)) {
+				ps.executeUpdate();
+			}
+		}
+	}
+
+	@Override
+	public List<DaycareNPC> getNPCS() throws Exception {
+		List<DaycareNPC> npcs = Lists.newArrayList();
+		try (Connection connection = provider.getConnection()) {
+			try (PreparedStatement query = connection.prepareStatement(prefix.apply(GET_NPCS))) {
+				ResultSet results = query.executeQuery();
+				while(results.next()) {
+					UUID uuid = UUID.fromString(results.getString("uuid"));
+					String name = results.getString("name");
+					npcs.add(new DaycareNPC(uuid, name));
+				}
+				results.close();
+			}
+		}
+
+		return npcs;
 	}
 
 	@Override
