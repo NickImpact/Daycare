@@ -63,5 +63,4 @@ public enum StorageType {
 		}
 		return null;
 	}
-
 }

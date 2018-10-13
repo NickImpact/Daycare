@@ -17,12 +17,12 @@ plugins {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
-version '0.8.0-BETA'
+version '0.8.1-BETA'
 
 group 'com.nickimpact.daycare'
 
 ext {
-    pluginversion = '0.8.0-BETA'
+    pluginversion = '0.11.0-BETA'
     spongeapiversion = '7.1.0-SNAPSHOT'
     completeversion = "S${spongeapiversion.substring(0, 5)}-${pluginversion}"
 }
@@ -33,10 +33,11 @@ compileJava {
 }
 
 minecraft {
-    version = "1.12.2-14.23.1.2587"
+    version = "1.12.2-14.23.3.2655"
     runDir = "run"
     mappings = "snapshot_20171007"
     useDepAts = true
+    makeObfSourceJar = false
 }
 
 spongestart{
@@ -55,11 +56,18 @@ repositories {
         name = 'sponge'
         url = 'http://repo.spongepowered.org/maven'
     }
+    ivy {
+        url "https://download.nodecdn.net/containers"
+        layout "pattern", {
+            artifact "/[organisation]/[module]/release/[revision]/[ext]"
+        }
+    }
 }
 
 dependencies {
     compileOnly fileTree(dir: 'libs', include: '*.jar')
-    compileOnly 'org.spongepowered:spongeapi:7.0.0'
+    compileOnly 'org.spongepowered:spongeapi:7.1.0-SNAPSHOT'
+    compile 'reforged:server:6.3.4@Pixelmon-1.12.2-6.3.4-server.jar'
     compileOnly "org.projectlombok:lombok:1.16.10"
     compileOnly group: 'com.zaxxer', name: 'HikariCP', version: '2.5.1'
     testCompile "junit:junit:4.11"

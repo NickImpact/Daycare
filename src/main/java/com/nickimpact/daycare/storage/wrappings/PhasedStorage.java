@@ -91,6 +91,16 @@ public class PhasedStorage implements Storage {
 	}
 
 	@Override
+	public CompletableFuture<Void> updateAll(List<Ranch> ranch) {
+		phaser.register();
+		try {
+			return delegate.updateAll(ranch);
+		} finally {
+			phaser.arriveAndDeregister();
+		}
+	}
+
+	@Override
 	public CompletableFuture<Void> deleteRanch(UUID uuid) {
 		phaser.register();
 		try {

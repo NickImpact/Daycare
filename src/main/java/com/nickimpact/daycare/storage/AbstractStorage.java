@@ -34,7 +34,6 @@ import com.nickimpact.daycare.storage.wrappings.PhasedStorage;
 import com.nickimpact.daycare.utils.MessageUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.spongepowered.api.Sponge;
 
 import java.util.List;
 import java.util.UUID;
@@ -110,6 +109,11 @@ public class AbstractStorage implements Storage {
 	@Override
 	public CompletableFuture<Void> updateRanch(Ranch ranch) {
 		return makeFuture(() -> dao.updateRanch(ranch));
+	}
+
+	@Override
+	public CompletableFuture<Void> updateAll(List<Ranch> ranch) {
+		return makeFuture(() -> dao.updateAll(ranch));
 	}
 
 	@Override

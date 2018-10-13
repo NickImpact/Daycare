@@ -2,6 +2,7 @@ package com.nickimpact.daycare.ui.storage;
 
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.DaycarePlugin;
+import com.nickimpact.daycare.configuration.ConfigKeys;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.ranch.Pen;
 import com.nickimpact.daycare.ranch.Pokemon;
@@ -13,6 +14,7 @@ import com.nickimpact.impactor.gui.v2.Displayable;
 import com.nickimpact.impactor.gui.v2.Icon;
 import com.nickimpact.impactor.gui.v2.Layout;
 import com.nickimpact.impactor.gui.v2.UI;
+import com.pixelmonmod.pixelmon.api.pokemon.PokemonSpec;
 import com.pixelmonmod.pixelmon.config.PixelmonEntityList;
 import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
 import com.pixelmonmod.pixelmon.storage.NbtKeys;
@@ -25,6 +27,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.entity.CollideEntityEvent;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.enchantment.Enchantment;
@@ -37,6 +40,8 @@ import org.spongepowered.api.text.format.TextColors;
 import java.util.Optional;
 
 public class PartyUI implements Displayable {
+
+	private final PokemonSpec UNBREEDABLE = new PokemonSpec("unbreedable");
 
 	private Ranch ranch;
 	private Pen pen;
@@ -53,7 +58,7 @@ public class PartyUI implements Displayable {
 		this.display = UI.builder()
 				.property(InventoryDimension.of(9, 5))
 				.title(MessageUtils.fetchMsg(player, MsgConfigKeys.PARTY_TITLE))
-				.build(player, DaycarePlugin.getInstance())
+				.build(DaycarePlugin.getInstance())
 				.define(setupDisplay(player, id));
 	}
 
@@ -84,44 +89,54 @@ public class PartyUI implements Displayable {
 
 				EntityPixelmon pokemon = (EntityPixelmon) PixelmonEntityList.createEntityFromNBT(nbt, (World) player.getWorld());
 				Icon icon = StandardIcons.getPicture(player, new Pokemon(pokemon), DaycarePlugin.getInstance().getMsgConfig().get(MsgConfigKeys.POKEMON_LORE_SELECT));
-				final int index = k;
-				final int pos = i;
-				icon.addListener(clickable -> {
-					icon.getDisplay().offer(Keys.ITEM_ENCHANTMENTS, Lists.newArrayList(
-							Enchantment.builder()
-									.type(EnchantmentTypes.UNBREAKING)
-									.level(1)
-									.build()
-					));
-					icon.getDisplay().offer(Keys.HIDE_ENCHANTMENTS, true);
-					this.display.setSlot(pos, icon);
-					this.selection = new Selection(pokemon, index - 10);
-					Icon confirm = Icon.from(
-							ItemStack.builder()
-									.itemType(ItemTypes.DYE)
-									.add(Keys.DYE_COLOR, DyeColors.LIME)
-									.add(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(player, MsgConfigKeys.PARTY_CONFIRM))
-									.build()
-					);
-					confirm.addListener(clickable1 -> {
-						if(stor.partyPokemon.length == 1 || only1AblePokemon(stor)) {
+
+				if(!pokemon.isEgg) {
+					final int index = k;
+					final int pos = i;
+					icon.addListener(clickable -> {
+						if(this.UNBREEDABLE.matches(pokemon)) {
+							player.sendMessage(Text.of(DaycarePlugin.getInstance().getPluginInfo().error(), TextColors.GRAY, "That pokemon is marked as unbreedable..."));
 							return;
 						}
-						stor.recallAllPokemon();
-						stor.removeFromPartyPlayer(this.selection.getSlot());
-						Pokemon rep = new Pokemon(this.selection.getPokemon());
-						if(this.slot == 1) {
-							this.pen.setSlot1(rep);
-						} else {
-							this.pen.setSlot2(rep);
-						}
-						clickable.getPlayer().closeInventory();
-						new PenUI(display.getPlayer(), this.ranch, this.pen, id).open();
-					});
-					this.display.setSlot(33, confirm);
+						icon.getDisplay().offer(Keys.ITEM_ENCHANTMENTS, Lists.newArrayList(
+								Enchantment.builder()
+										.type(EnchantmentTypes.UNBREAKING)
+										.level(1)
+										.build()
+						));
+						icon.getDisplay().offer(Keys.HIDE_ENCHANTMENTS, true);
+						this.display.setSlot(pos, icon);
+						this.selection = new Selection(pokemon, index - 10);
+						Icon confirm = Icon.from(
+								ItemStack.builder()
+										.itemType(ItemTypes.DYE)
+										.add(Keys.DYE_COLOR, DyeColors.LIME)
+										.add(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(player, MsgConfigKeys.PARTY_CONFIRM))
+										.build()
+						);
+						confirm.addListener(clickable1 -> {
+							if (stor.partyPokemon.length == 1 || only1AblePokemon(stor)) {
+								return;
+							}
+							stor.recallAllPokemon();
+							stor.removeFromPartyPlayer(this.selection.getSlot());
+							Pokemon rep = new Pokemon(this.selection.getPokemon());
+							if (this.slot == 1) {
+								this.pen.setSlot1(rep);
+							} else {
+								this.pen.setSlot2(rep);
+							}
+							if(this.pen.isFull() && DaycarePlugin.getInstance().getConfig().get(ConfigKeys.BREEDING_ENABLED)) {
+								this.pen.initialize(ranch.getOwnerUUID());
+							}
+							clickable.getPlayer().closeInventory();
+							new PenUI(player, this.ranch, this.pen, id).open(player);
+						});
+						this.display.setSlot(33, confirm);
 
-				});
-				lb.slot(icon, i);
+					});
+					lb.slot(icon, i);
+				}
 			}
 		});
 
@@ -129,8 +144,8 @@ public class PartyUI implements Displayable {
 
 		Icon back = Icon.from(ItemStack.builder().itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:eject_button").get()).add(Keys.DISPLAY_NAME, Text.of(TextColors.RED, "Go Back ")).build());
 		back.addListener(clickable -> {
-			this.close();
-			new PenUI(clickable.getPlayer(), this.ranch, this.pen, id).open();
+			this.close(player);
+			new PenUI(clickable.getPlayer(), this.ranch, this.pen, id).open(player);
 		});
 		lb.slot(back, 29);
 
@@ -141,8 +156,8 @@ public class PartyUI implements Displayable {
 						.build()
 		);
 		pc.addListener(clickable -> {
-			this.close();
-			new PcUI(clickable.getPlayer(), this.ranch, this.pen, id, this.slot).open();
+			this.close(player);
+			new PcUI(clickable.getPlayer(), this.ranch, this.pen, id, this.slot).open(player, 1);
 		});
 		lb.slot(pc, 31);
 

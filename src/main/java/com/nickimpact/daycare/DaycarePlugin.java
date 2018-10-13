@@ -4,28 +4,35 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
+import com.nickimpact.daycare.api.DaycareService;
+import com.nickimpact.daycare.api.breeding.BreedStyle;
 import com.nickimpact.daycare.api.text.Tokens;
 import com.nickimpact.daycare.commands.DaycareCmd;
 import com.nickimpact.daycare.configuration.ConfigKeys;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
+import com.nickimpact.daycare.impl.DaycareServiceImpl;
 import com.nickimpact.daycare.internal.TextParsingUtils;
 import com.nickimpact.daycare.listeners.ConnectionListener;
 import com.nickimpact.daycare.listeners.NPCListener;
 import com.nickimpact.daycare.ranch.DaycareNPC;
 import com.nickimpact.daycare.ranch.Ranch;
+import com.nickimpact.daycare.ranch.breeding.BreedStyleInstanceAdapter;
+import com.nickimpact.daycare.ranch.breeding.BreedStylePixelmonNative;
+import com.nickimpact.daycare.ranch.breeding.BreedStyleTimed;
 import com.nickimpact.daycare.storage.Storage;
 import com.nickimpact.daycare.storage.StorageFactory;
 import com.nickimpact.daycare.storage.StorageType;
 import com.nickimpact.daycare.utils.DaycareRunningTasks;
 import com.nickimpact.daycare.utils.MessageUtils;
 import com.nickimpact.impactor.CoreInfo;
+import com.nickimpact.impactor.api.commands.SpongeCommand;
 import com.nickimpact.impactor.api.configuration.AbstractConfig;
 import com.nickimpact.impactor.api.configuration.AbstractConfigAdapter;
 import com.nickimpact.impactor.api.configuration.ConfigBase;
-import com.nickimpact.impactor.api.configuration.ConfigKey;
 import com.nickimpact.impactor.api.logger.Logger;
-import com.nickimpact.impactor.api.plugins.ConfigurableSpongePlugin;
 import com.nickimpact.impactor.api.plugins.PluginInfo;
+import com.nickimpact.impactor.api.plugins.SpongePlugin;
+import com.nickimpact.impactor.api.services.plan.PlanData;
 import com.nickimpact.impactor.logging.ConsoleLogger;
 import com.nickimpact.impactor.logging.SpongeLogger;
 import lombok.Getter;
@@ -34,6 +41,7 @@ import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.service.ChangeServiceProviderEvent;
@@ -51,9 +59,12 @@ import org.spongepowered.api.text.format.TextColors;
 import java.io.*;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * (Some note will go here)
@@ -62,7 +73,7 @@ import java.util.concurrent.ExecutionException;
  */
 @Getter
 @Plugin(id = DaycareInfo.ID, name = DaycareInfo.NAME, version = DaycareInfo.VERSION, description = DaycareInfo.DESCRIPTION, dependencies = @Dependency(id = CoreInfo.ID))
-public class DaycarePlugin extends ConfigurableSpongePlugin {
+public class DaycarePlugin extends SpongePlugin {
 
 	@Getter private static DaycarePlugin instance;
 
@@ -85,10 +96,18 @@ public class DaycarePlugin extends ConfigurableSpongePlugin {
 	/** Used and held for quick access of the user storage service registry */
 	private UserStorageService userStorageService;
 
-	public static final Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
+	public static final Gson prettyGson = new GsonBuilder()
+			.setPrettyPrinting()
+			.registerTypeAdapter(BreedStyle.Instance.class, new BreedStyleInstanceAdapter())
+			.create();
 
 	private ConfigBase config;
 	private ConfigBase msgConfig;
+
+	private DaycareCmd command;
+
+	private ConnectionListener cListener;
+	private NPCListener npcListener;
 
 	private Storage storage;
 
@@ -98,71 +117,9 @@ public class DaycarePlugin extends ConfigurableSpongePlugin {
 	/** An internal provider set to help decode variables in strings */
 	private TextParsingUtils textParsingUtils = new TextParsingUtils();
 
-	@Listener
-	public void onInit(GameInitializationEvent e) {
-		instance = this;
-		this.logger = new ConsoleLogger(this, new SpongeLogger(this, fallback));
-		DaycareInfo.startup();
+	private DaycareService service = new DaycareServiceImpl();
 
-		try {
-			this.logger.info(Text.of(TextColors.GRAY, "Now entering the init phase..."));
-			this.logger.info(Text.of(TextColors.GRAY, "Loading configuration..."));
-			this.config = new AbstractConfig(this, new AbstractConfigAdapter(this), new ConfigKeys(), "daycare.conf");
-			this.config.init();
-			this.msgConfig = new AbstractConfig(this, new AbstractConfigAdapter(this), new MsgConfigKeys(), String.format("lang/%s.conf", this.config.get(ConfigKeys.LANG)));
-			this.msgConfig.init();
-
-			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_NUCLEUS));
-			new Tokens();
-
-			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_COMMANDS));
-			new DaycareCmd(this).register(this);
-
-			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_LISTENERS));
-			Sponge.getEventManager().registerListeners(this, new ConnectionListener());
-			Sponge.getEventManager().registerListeners(this, new NPCListener());
-
-			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_STORAGE));
-			this.storage = StorageFactory.getInstance(this, StorageType.H2);
-			try {
-				this.npcs = this.storage.getNPCS().get();
-			} catch (InterruptedException | ExecutionException e1) {
-				e1.printStackTrace();
-			}
-
-			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_COMPLETE));
-			connect();
-		} catch (Exception exc) {
-			this.error = exc;
-			disable();
-			exc.printStackTrace();
-		}
-	}
-
-	@Listener
-	public void onStart(GameStartedServerEvent e) {
-		if(!Sponge.getServiceManager().isRegistered(EconomyService.class)) {
-			List<Text> error = Lists.newArrayList();
-			addTri(error);
-			error.addAll(MessageUtils.fetchMsgs(MsgConfigKeys.STARTUP_NO_ECONOMY_SERVICE));
-			this.getLogger().send(Logger.Prefixes.NONE, error);
-			this.disconnect();
-			return;
-		}
-
-		this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_STARTED_PHASE));
-		this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_STARTED_TASKS));
-
-		DaycareRunningTasks.runLvlTask();
-		DaycareRunningTasks.runBreedingTask();
-		this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_STARTED_COMPLETE));
-		this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_COMPLETE));
-	}
-
-	@Listener
-	public void onStop(GameStoppingServerEvent e) {
-		disconnect();
-	}
+	private BreedStyle breedStyle;
 
 	@Listener
 	public void registerServices(ChangeServiceProviderEvent e){
@@ -195,27 +152,134 @@ public class DaycarePlugin extends ConfigurableSpongePlugin {
 	}
 
 	@Override
-	public void doConnect() {
-
-	}
-
-	@Override
-	public void doDisconnect() {
-		for(Ranch ranch : this.getRanches()) {
-			this.getStorage().updateRanch(ranch);
-		}
-
-		try {
-			this.storage.shutdown();
-		} catch (Exception e) {
-			this.getLogger().error("Unable to shutdown database properly...");
-			e.printStackTrace();
-		}
-	}
-
-	@Override
 	public Logger getLogger() {
 		return this.logger;
+	}
+
+	@Override
+	public Optional<PlanData> getPlanData() {
+		return Optional.empty();
+	}
+
+	@Override
+	public List<ConfigBase> getConfigs() {
+		return Lists.newArrayList(config, msgConfig);
+	}
+
+	@Override
+	public List<SpongeCommand> getCommands() {
+		return Collections.singletonList(command);
+	}
+
+	@Override
+	public List<Object> getListeners() {
+		return Lists.newArrayList();
+	}
+
+	@Listener
+	public void onPreInit(GamePreInitializationEvent e) {
+		instance = this;
+		Sponge.getServiceManager().setProvider(this, DaycareService.class, service);
+		this.service.getBreedStyleRegistry().register(Lists.newArrayList(
+				new BreedStylePixelmonNative(),
+				new BreedStyleTimed()
+		));
+		try {
+			this.service.getBreedStyleRegistry().getInstanceRegistry().register(BreedStylePixelmonNative.BSPNInstance.class);
+			this.service.getBreedStyleRegistry().getInstanceRegistry().register(BreedStyleTimed.BSTInstance.class);
+		} catch (Exception ignored) {}
+	}
+
+	@Listener
+	public void onInit(GameInitializationEvent e) {
+		this.logger = new ConsoleLogger(this, new SpongeLogger(this, fallback));
+		DaycareInfo.startup();
+
+		try {
+			if(!validVersion()) {
+				throw new InvalidPixelmonException();
+			}
+
+			this.logger.info(Text.of(TextColors.GRAY, "Now entering the init phase..."));
+			this.logger.info(Text.of(TextColors.GRAY, "Loading configuration..."));
+			this.config = new AbstractConfig(this, new AbstractConfigAdapter(this), new ConfigKeys(), "daycare.conf");
+			this.config.init();
+			this.msgConfig = new AbstractConfig(this, new AbstractConfigAdapter(this), new MsgConfigKeys(), String.format("lang/%s.conf", this.config.get(ConfigKeys.LANG)));
+			this.msgConfig.init();
+
+			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_NUCLEUS));
+			new Tokens();
+
+			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_COMMANDS));
+			(command = new DaycareCmd(this)).register(this);
+
+			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_LISTENERS));
+			Sponge.getEventManager().registerListeners(this, new ConnectionListener());
+			Sponge.getEventManager().registerListeners(this, new NPCListener());
+
+			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_STORAGE));
+			this.storage = StorageFactory.getInstance(this, StorageType.H2);
+			try {
+				this.npcs = this.storage.getNPCS().get();
+			} catch (InterruptedException | ExecutionException e1) {
+				e1.printStackTrace();
+			}
+
+			this.breedStyle = this.service.getBreedStyleRegistry().getFromName(this.config.get(ConfigKeys.BREED_STYLE)).orElse(this.service.getBreedStyleRegistry().getFirst());
+
+			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_COMPLETE));
+		} catch (Exception exc) {
+			this.error = exc;
+			disable();
+			exc.printStackTrace();
+		}
+	}
+
+	@Listener
+	public void onServerStarted(GameStartedServerEvent e) {
+		if(!Sponge.getServiceManager().isRegistered(EconomyService.class)) {
+			List<Text> error = Lists.newArrayList();
+			addTri(error);
+			error.addAll(MessageUtils.fetchMsgs(MsgConfigKeys.STARTUP_NO_ECONOMY_SERVICE));
+			this.getLogger().send(Logger.Prefixes.NONE, error);
+			this.disconnect();
+			return;
+		}
+
+		this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_STARTED_PHASE));
+		this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_STARTED_TASKS));
+
+		DaycareRunningTasks.runLvlTask();
+		this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_STARTED_COMPLETE));
+		this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_COMPLETE));
+
+		Sponge.getScheduler().createTaskBuilder()
+				.execute(() -> this.getStorage().updateAll(this.getRanches()))
+				.interval(this.config.get(ConfigKeys.GENERAL_UPDATE_PERIOD), TimeUnit.MINUTES)
+				.submit(this);
+	}
+
+	@Listener
+	public void onServerStopping(GameStoppingServerEvent e) {
+		this.onDisconnect();
+	}
+
+	@Override
+	public void onDisconnect() {
+		this.getStorage().updateAll(this.getRanches()).thenAccept(after -> {
+			try {
+				this.getRanches().forEach(Ranch::shutdown);
+				this.storage.shutdown();
+			} catch (Exception e1) {
+				this.getLogger().error("Unable to shutdown database properly...");
+				e1.printStackTrace();
+			}
+		});
+	}
+
+	@Override
+	public void onReload() {
+		DaycareRunningTasks.runLvlTask();
 	}
 
 	public File getDataDirectory() {
@@ -252,7 +316,6 @@ public class DaycarePlugin extends ConfigurableSpongePlugin {
 	}
 
 	private void disable() {
-		// Disable everything, just in case. Thanks to pie-flavor: https://forums.spongepowered.org/t/disable-plugin-disable-itself/15831/8
 		Sponge.getEventManager().unregisterPluginListeners(this);
 		Sponge.getCommandManager().getOwnedBy(this).forEach(Sponge.getCommandManager()::removeMapping);
 		Sponge.getScheduler().getScheduledTasks(this).forEach(Task::cancel);
@@ -284,6 +347,13 @@ public class DaycarePlugin extends ConfigurableSpongePlugin {
 				error.add(Text.of(TextColors.RED, this.error.getMessage()));
 				error.add(Text.of(TextColors.RED, "Please correct this and restart your server."));
 				error.add(Text.of(TextColors.YELLOW, "----------------------------"));
+			} else if(this.error instanceof InvalidPixelmonException) {
+				error.add(Text.of(TextColors.RED, "Daycare detected an incompatible version of Pixelmon..."));
+				error.add(Text.of(TextColors.RED, "Either you are using Pixelmon 6.2.3 and below, or you"));
+				error.add(Text.of(TextColors.RED, "are using Pixelmon Generations. As such, Daycare was unable to start."));
+				error.add(Text.of(TextColors.YELLOW, "----------------------------"));
+
+				return error;
 			}
 
 			error.add(Text.of(TextColors.YELLOW, "(The error that was thrown is shown below)"));
@@ -302,4 +372,21 @@ public class DaycarePlugin extends ConfigurableSpongePlugin {
 
 		return error;
 	}
+
+	public static boolean validVersion() {
+		String version = Sponge.getPluginManager().getPlugin("pixelmon").get().getVersion().get();
+		String[] identifiers = version.split("\\.");
+		int major = Integer.parseInt(identifiers[0]);
+		int minor = Integer.parseInt(identifiers[1]);
+		// We really don't care about the technical patch version, but we will store it for potential use later on
+		int patch = Integer.parseInt(identifiers[2]);
+
+		if(major == 6) {
+			return minor >= 3;
+		}
+
+		return major >= 7;
+	}
+
+	private class InvalidPixelmonException extends Exception {}
 }

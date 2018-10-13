@@ -6,7 +6,7 @@ import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.cause.Cause;
 
 /**
- * (Some note will appear here)
+ * Represents an event which is cancellable.
  *
  * @author NickImpact (Nick DeGruccio)
  */

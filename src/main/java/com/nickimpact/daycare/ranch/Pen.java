@@ -1,9 +1,8 @@
 package com.nickimpact.daycare.ranch;
 
 import com.nickimpact.daycare.DaycarePlugin;
-import com.nickimpact.daycare.configuration.ConfigKeys;
+import com.nickimpact.daycare.api.breeding.BreedStyle;
 import com.pixelmonmod.pixelmon.entities.pixelmon.Entity10CanBreed;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
-import java.util.Random;
+import java.util.UUID;
 
 /**
  * An individual area within the Daycare ranch for the player. The pen can hold only 2 pokemon, and one egg.
@@ -24,18 +23,19 @@ public class Pen {
 	private Pokemon slot1;
 	private Pokemon slot2;
 	private Pokemon egg;
-	@Getter private Date readyPoint;
 
 	/** Whether the ranch owner owns this pen */
 	@Getter private boolean unlocked = false;
 	@Getter private Date dateUnlocked;
 	@Getter private BigDecimal price;
+	@Getter private int numEggsProduced;
 
-	private static final long MAX_WAIT = DaycarePlugin.getInstance().getConfig().get(ConfigKeys.MAX_BREEDING_WAIT_TIME);
-	private static final Random rng = new Random();
+	/** The running task of the breeding cycle for this pen */
+	@Getter private BreedStyle.Instance instance;
 
 	void unlock() {
 		this.unlocked = true;
+		this.dateUnlocked = Date.from(Instant.now());
 	}
 
 	public boolean isEmpty() {
@@ -47,36 +47,25 @@ public class Pen {
 	}
 
 	public boolean canBreed() {
-		return Entity10CanBreed.canBreed(slot1.getPokemon(), slot2.getPokemon()) && egg == null;
+		return Entity10CanBreed.canBreed(slot1.getPokemon(), slot2.getPokemon()) && !this.getEgg().isPresent();
 	}
 
-	/**
-	 * Determines whether two parent pokemon will produce an offspring on the next iteration check.
-	 *
-	 * @return True if two parent pokemon will breed, false otherwise
-	 */
-	boolean willBreed() {
-		if(!this.isFull() || !this.canBreed()){
-			return false;
+	public void initialize(UUID owner) {
+		if(this.instance == null) {
+			this.instance = DaycarePlugin.getInstance().getBreedStyle().createInstance(owner, this, slot1, slot2);
+		} else {
+			if(this.instance.getClass().isInstance(DaycarePlugin.getInstance().getBreedStyle())) {
+				this.instance.supply(owner, this, slot1, slot2).register();
+			} else {
+				this.instance = DaycarePlugin.getInstance().getBreedStyle().createInstance(owner, this, slot1, slot2);
+			}
 		}
-
-		Date wait = Date.from(Instant.now().plusSeconds(5));
-		if(wait.compareTo(Date.from(Instant.now().plusSeconds(MAX_WAIT))) < 0) {
-			int rngVal = rng.nextInt(100001); // Between 0 - 100000
-			double result = (double) rngVal / 1000000.0; // Between 0.0 - 1.0
-			double chance = DaycarePlugin.getInstance().getConfig().get(ConfigKeys.EGG_CHANCE) / 100;
-
-			return result < chance;
-		}
-
-		return false;
 	}
 
-	Pokemon breed() {
-		EntityPixelmon offspring = new EntityPixelmon(slot1.getPokemon().world);
-		offspring.makeEntityIntoEgg(slot1.getPokemon(), slot2.getPokemon());
-
-		return new Pokemon(offspring);
+	public void halt() {
+		if(this.instance != null) {
+			this.instance.getRunner().cancel();
+		}
 	}
 
 	public Optional<Pokemon> getAtPosition(int pos) {

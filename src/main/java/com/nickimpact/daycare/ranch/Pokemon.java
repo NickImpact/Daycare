@@ -12,7 +12,6 @@ import lombok.Setter;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.entity.living.player.Player;
 
 import java.time.Instant;
 import java.util.Date;
@@ -39,6 +38,8 @@ public class Pokemon {
 
 	@Getter @Setter
 	private Date lastLvl;
+
+	@Getter @Setter private transient boolean cantLevel;
 
 	public static final long waitTime = DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LVL_WAIT_TIME);
 
@@ -75,5 +76,9 @@ public class Pokemon {
 
 	public void incrementGainedLvls() {
 		++this.gainedLvls;
+	}
+
+	public int getCurrentLvl() {
+		return this.startLvl + this.gainedLvls;
 	}
 }

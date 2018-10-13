@@ -162,6 +162,21 @@ public class SqlDao extends AbstractDao {
 	}
 
 	@Override
+	public void updateAll(List<Ranch> ranches) throws Exception {
+		try (Connection connection = provider.getConnection()) {
+			for(Ranch ranch : ranches) {
+				String stmt = prefix.apply(UPDATE_RANCH);
+				stmt = String.format(stmt, DaycarePlugin.prettyGson.toJson(ranch), ranch.getOwnerUUID());
+
+				try (PreparedStatement ps = connection.prepareStatement(stmt)) {
+					ps.executeUpdate();
+				}
+			}
+		}
+
+	}
+
+	@Override
 	public void deleteRanch(UUID uuid) throws Exception {
 		try (Connection connection = provider.getConnection()) {
 			String stmt = prefix.apply(DELETE_RANCH);
@@ -189,6 +204,9 @@ public class SqlDao extends AbstractDao {
 					return null;
 				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 

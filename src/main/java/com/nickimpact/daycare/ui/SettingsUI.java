@@ -21,8 +21,6 @@ import org.spongepowered.api.text.format.TextColors;
 
 public class SettingsUI implements Displayable {
 
-	private Player player;
-	private Ranch ranch;
 	private Ranch.Settings settings;
 
 	private UI display;
@@ -34,8 +32,6 @@ public class SettingsUI implements Displayable {
 	private final Icon EVOLVE = Icon.from(ItemStack.builder().itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:shiny_stone").get()).build());
 
 	public SettingsUI(Player player, Ranch ranch) {
-		this.player = player;
-		this.ranch = ranch;
 		this.settings = ranch.getSettings();
 
 		MOVES.getDisplay().offer(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(player, MsgConfigKeys.SETINGS_MOVES_TITLE));
@@ -48,7 +44,7 @@ public class SettingsUI implements Displayable {
 		this.display = UI.builder()
 				.title(MessageUtils.fetchMsg(player, MsgConfigKeys.SETTINGS_UI_TITLE))
 				.dimension(InventoryDimension.of(9, 6))
-				.build(player, DaycarePlugin.getInstance())
+				.build(DaycarePlugin.getInstance())
 				.define(setupDisplay(player));
 	}
 
@@ -75,8 +71,8 @@ public class SettingsUI implements Displayable {
 						.build()
 		);
 		back.addListener(clickable -> {
-			this.close();
-			new RanchUI(player).open();
+			this.close(player);
+			new RanchUI(player).open(player);
 		});
 		builder = builder.slot(back, 37);
 		Icon confirm = Icon.from(ItemStack.builder().itemType(ItemTypes.DYE).add(Keys.DYE_COLOR, DyeColors.LIME).add(Keys.DISPLAY_NAME, Text.of(TextColors.GREEN, "Confirm Selection")).build());
@@ -85,8 +81,8 @@ public class SettingsUI implements Displayable {
 			this.settings.setCanLearnMoves(this.display.getSlot(14) == ON);
 			this.settings.setCanEvolve(this.display.getSlot(39) == ON);
 			player.sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.SETTINGS_APPLY));
-			this.close();
-			new RanchUI(player).open();
+			this.close(player);
+			new RanchUI(player).open(player);
 		});
 		builder = builder.slot(confirm, 43);
 

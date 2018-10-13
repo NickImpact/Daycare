@@ -9,6 +9,7 @@ import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.ranch.Pokemon;
 import com.nickimpact.daycare.ranch.Ranch;
 import com.nickimpact.daycare.stats.Statistics;
+import com.pixelmonmod.pixelmon.battles.attacks.Attack;
 import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Moveset;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.evolution.Evolution;
@@ -17,15 +18,17 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 
 import java.time.Instant;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.nickimpact.daycare.DaycarePlugin.validVersion;
 
 /**
  * (Some note will appear here)
@@ -35,35 +38,22 @@ import java.util.stream.Collectors;
 public class DaycareRunningTasks {
 
 	public static void runLvlTask() {
-		Sponge.getScheduler().createTaskBuilder().execute(() -> {
-			final List<Ranch> ranches = ImmutableList.copyOf(DaycarePlugin.getInstance().getRanches().stream().filter(ranch -> ranch.getSettings().canLevel()).collect(Collectors.toList()));
-			for(Ranch ranch : ranches) {
-				ranch.getPens().stream().filter(pen -> !pen.isEmpty()).forEach(pen -> {
-					pen.getAtPosition(1).ifPresent(pokemon -> DaycareRunningTasks.levelTask(ranch, pokemon));
-					pen.getAtPosition(2).ifPresent(pokemon -> DaycareRunningTasks.levelTask(ranch, pokemon));
-				});
-			}
-		})
-		.interval(DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LVL_TASK_TIME), TimeUnit.SECONDS)
-		.async()
-		.submit(DaycarePlugin.getInstance());
-	}
-
-	public static void runBreedingTask() {
-		Sponge.getScheduler().createTaskBuilder().execute(() -> {
-			final List<Ranch> ranches = ImmutableList.copyOf(DaycarePlugin.getInstance().getRanches());
-			for(Ranch ranch : ranches) {
-				boolean breeding = ranch.attemptBreeding();
-				if (breeding) {
-					Optional<Player> optPl = Sponge.getServer().getPlayer(ranch.getOwnerUUID());
-					optPl.ifPresent(player -> {
-						player.sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.EGGS_AVAILABLE));
+		if(DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LEVELING_ENABLED)) {
+			Sponge.getScheduler().createTaskBuilder().execute(() -> {
+				final List<Ranch> ranches = ImmutableList.copyOf(DaycarePlugin.getInstance().getRanches().stream().filter(ranch -> ranch.getSettings().canLevel()).collect(Collectors.toList()));
+				for (Ranch ranch : ranches) {
+					ranch.getPens().stream().filter(pen -> !pen.isEmpty()).forEach(pen -> {
+						Sponge.getScheduler().createTaskBuilder().execute(() -> {
+							pen.getAtPosition(1).ifPresent(pokemon -> DaycareRunningTasks.levelTask(ranch, pokemon));
+							pen.getAtPosition(2).ifPresent(pokemon -> DaycareRunningTasks.levelTask(ranch, pokemon));
+						}).submit(DaycarePlugin.getInstance());
 					});
 				}
-			}
-		})
-		.interval(DaycarePlugin.getInstance().getConfig().get(ConfigKeys.BREEDING_TASK_TIME), TimeUnit.SECONDS)
-		.submit(DaycarePlugin.getInstance());
+			})
+			.interval(DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LVL_TASK_TIME), TimeUnit.SECONDS)
+			.async()
+			.submit(DaycarePlugin.getInstance());
+		}
 	}
 
 	private static void levelTask(Ranch ranch, Pokemon pokemon) {
@@ -82,35 +72,87 @@ public class DaycareRunningTasks {
 			pokemon.setLastLvl(Date.from(Instant.now()));
 			pokemon.incrementGainedLvls();
 			ranch.getStats().incrementStat(Statistics.Stats.NUM_GAINED_LVLS);
+
+			if(ranch.getSettings().canLearnMoves()) {
+				attemptMoveLearn(ranch, pokemon);
+			}
 			if(ranch.getSettings().canEvolve()) {
-				attemptEvolution(ranch, pokemon);
+				if(attemptEvolution(ranch, pokemon)) {
+					if(ranch.getSettings().canLearnMoves()) {
+						attemptMoveLearn(ranch, pokemon);
+					}
+				}
 			}
 
-			// Unsupported until Pixelmon 6.3
-			if(ranch.getSettings().canLearnMoves()) {
-				attemptMoveLearn(pokemon);
-			}
+
 			DaycarePlugin.getInstance().getStorage().updateRanch(ranch);
 		}
 	}
 
-	private static void attemptEvolution(Ranch ranch, Pokemon pokemon) {
-		for(LevelingEvolution evo : pokemon.getPokemon().getEvolutions(LevelingEvolution.class)) {
-			if(evo.level <= pokemon.getStartLvl() + pokemon.getGainedLvls()) {
+	private static boolean attemptEvolution(Ranch ranch, Pokemon pokemon) {
+		ArrayList<LevelingEvolution> evolutions = pokemon.getPokemon().getEvolutions(LevelingEvolution.class);
+		if(evolutions.size() == 0) {
+			return false;
+		}
+
+		for(LevelingEvolution evolution : evolutions) {
+			if(evolution.to == null || evolution.to.name == null) continue; // Ignore broken evolutions
+
+			if(evolution.getLevel() <= pokemon.getStartLvl() + pokemon.getGainedLvls() && evolution.conditions.stream().allMatch(condition -> condition.passes(pokemon.getPokemon()))) {
 				Optional<Player> optPl = Sponge.getServer().getPlayer(ranch.getOwnerUUID());
-				optPl.ifPresent(player -> {
+				if (optPl.isPresent()) {
 					Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-					tokens.put("pokemon_before_evo", src -> Optional.of(Text.of(pokemon.getPokemon())));
-					tokens.put("pokemon_after_evo", src -> Optional.of(Text.of(evo.to.name)));
-					player.sendMessages(MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.EVOLVE, tokens, null));
-				});
-				pokemon.evolve(evo.to);
+					tokens.put("pokemon_before_evo", src -> Optional.of(Text.of(pokemon.getPokemon().getName())));
+					tokens.put("pokemon_after_evo", src -> Optional.of(Text.of(evolution.to.name)));
+					optPl.get().sendMessages(MessageUtils.fetchAndParseMsgs(optPl.get(), MsgConfigKeys.EVOLVE, tokens, null));
+				}
+				pokemon.evolve(evolution.to);
+
+				return true;
 			}
 		}
+
+		return false;
 	}
 
-	private static void attemptMoveLearn(Pokemon pokemon) {
-		Moveset current = pokemon.getPokemon().getMoveset();
-		// TODO - Get the next available move, and if levels match, do work for it
+	private static void attemptMoveLearn(Ranch ranch, Pokemon pokemon) {
+		Moveset moveset = pokemon.getPokemon().getMoveset();
+		LinkedHashMap<Integer, ArrayList<Attack>> levelupMoves = pokemon.getPokemon().baseStats.levelUpMoves;
+        int currLevel = pokemon.getCurrentLvl();
+
+		ArrayList<Attack> attacks = levelupMoves.get(currLevel);
+		if(attacks != null) {
+			for(Attack attack : attacks) {
+				Optional<Player> optPl = Sponge.getServer().getPlayer(ranch.getOwnerUUID());
+				optPl.ifPresent(player -> {
+					if(moveset.size() < 4) {
+						moveset.add(attack);
+
+						Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
+						tokens.put("pokemon_new_move", src -> Optional.of(Text.of(attack.baseAttack.getLocalizedName())));
+
+						Map<String, Object> variables = Maps.newHashMap();
+						variables.put("dummy", pokemon.getPokemon());
+						variables.put("dummy2", pokemon);
+
+						player.sendMessages(MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.LEARN_MOVE, tokens, variables));
+					} else {
+						Attack old = moveset.remove(0);
+						moveset.add(attack);
+
+						Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
+						tokens.put("pokemon_old_move", src -> Optional.of(Text.of(old.baseAttack.getLocalizedName())));
+						tokens.put("pokemon_new_move", src -> Optional.of(Text.of(attack.baseAttack.getLocalizedName())));
+
+						Map<String, Object> variables = Maps.newHashMap();
+						variables.put("dummy", pokemon.getPokemon());
+						variables.put("dummy2", pokemon);
+
+						player.sendMessages(MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.LEARN_MOVE_REPLACE, tokens, variables));
+					}
+				});
+			}
+		}
+
 	}
 }

@@ -28,12 +28,15 @@ import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -43,6 +46,8 @@ import java.util.function.Function;
  */
 public class PenUI implements Displayable {
 
+	private static final ItemStack NO_EGG = ItemStack.builder().itemType(ItemTypes.BARRIER).add(Keys.DISPLAY_NAME, Text.of(TextColors.RED, "No Egg Available...")).build();
+
 	/** The ranch being focused on */
 	private Ranch ranch;
 
@@ -50,6 +55,8 @@ public class PenUI implements Displayable {
 	private Pen pen;
 
 	private UI display;
+
+	private Task runner;
 
 	public PenUI(Player player, Ranch ranch, Pen pen, int id) {
 		this.ranch = ranch;
@@ -60,8 +67,18 @@ public class PenUI implements Displayable {
 		this.display = UI.builder()
 				.title(MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.PEN_UI_TITLE, tokens, null))
 				.dimension(InventoryDimension.of(9, 5))
-				.build(player, DaycarePlugin.getInstance())
+				.build(DaycarePlugin.getInstance())
 				.define(setupDisplay(player, id));
+
+		this.runner = Sponge.getScheduler().createTaskBuilder().execute(() -> {
+			this.updateBorder(player);
+			if(this.pen.getEgg().isPresent()) {
+				if(this.display.getSlot(13).getDisplay().equalTo(NO_EGG)) {
+					this.display.setSlot(13, this.eggIcon(player));
+				}
+			}
+		}).interval(1, TimeUnit.SECONDS).submit(DaycarePlugin.getInstance());
+		this.display.setCloseAction((e, p) -> runner.cancel());
 	}
 
 	@Override
@@ -83,21 +100,27 @@ public class PenUI implements Displayable {
 						.build()
 		);
 		back.addListener(clickable -> {
-			this.close();
-			new RanchUI(player).open();
+			this.close(player);
+			new RanchUI(player).open(player);
 		});
 		builder.slot(back, 30);
 
-		Icon purchase = Icon.from(
+		Icon history = Icon.from(
 				ItemStack.builder()
 						.itemType(ItemTypes.FILLED_MAP)
-						.add(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(MsgConfigKeys.PEN_UNLOCK))
+						.add(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(MsgConfigKeys.PEN_HISTORY))
 						.build()
 		);
 
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d, yyyy");
 		Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-		tokens.put("date_unlocked", src -> Optional.of(Text.of(sdf.format(this.pen.getDateUnlocked()))));
+		tokens.put("date_unlocked", src -> {
+			if(this.pen.getDateUnlocked() == null) {
+				return Optional.empty();
+			}
+
+			return Optional.of(Text.of(sdf.format(this.pen.getDateUnlocked())));
+		});
 		tokens.put("price", src -> {
 			if(this.pen.getPrice().signum() == -1) {
 				return Optional.of(Text.of("Free!"));
@@ -105,9 +128,9 @@ public class PenUI implements Displayable {
 
 			return Optional.of(DaycarePlugin.getInstance().getEconomy().getDefaultCurrency().format(this.pen.getPrice()));
 		});
-		purchase.getDisplay().offer(Keys.ITEM_LORE, Lists.newArrayList(
-				Text.of()
-		));
+		tokens.put("total_eggs_produced", src -> Optional.of(Text.of(this.pen.getNumEggsProduced())));
+		history.getDisplay().offer(Keys.ITEM_LORE, MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.PEN_HISTORY_LORE, tokens, null));
+		builder.slot(history, 32);
 
 		return builder.build();
 	}
@@ -125,18 +148,26 @@ public class PenUI implements Displayable {
 		s1.addListener(clickable -> {
 			clickable.getPlayer().closeInventory();
 			if(slot1.isPresent()) {
-				new SelectionUI(clickable.getPlayer(), ranch, pen, penID, slot1.get(), 1).open();
+				if(pen.getEgg().isPresent()) {
+					player.sendMessage(MessageUtils.fetchMsg(player, MsgConfigKeys.MUST_COLLECT_EGG_FIRST));
+					return;
+				}
+				new SelectionUI(clickable.getPlayer(), ranch, pen, penID, slot1.get(), 1).open(player);
 			} else {
-				new PartyUI(clickable.getPlayer(), this.ranch, this.pen, penID, 1).open();
+				new PartyUI(clickable.getPlayer(), this.ranch, this.pen, penID, 1).open(player);
 			}
 		});
 
 		s2.addListener(clickable -> {
 			clickable.getPlayer().closeInventory();
 			if(slot2.isPresent()) {
-				new SelectionUI(clickable.getPlayer(), ranch, pen, penID, slot2.get(), 2).open();
+				if(pen.getEgg().isPresent()) {
+					player.sendMessage(MessageUtils.fetchMsg(player, MsgConfigKeys.MUST_COLLECT_EGG_FIRST));
+					return;
+				}
+				new SelectionUI(clickable.getPlayer(), ranch, pen, penID, slot2.get(), 2).open(player);
 			} else {
-				new PartyUI(clickable.getPlayer(), this.ranch, this.pen, penID, 2).open();
+				new PartyUI(clickable.getPlayer(), this.ranch, this.pen, penID, 2).open(player);
 			}
 		});
 
@@ -145,35 +176,38 @@ public class PenUI implements Displayable {
 
 	private Layout.Builder drawEgg(Layout.Builder builder, Player player) {
 		if(this.pen.isFull()) {
-			Optional<Pokemon> optEgg = this.pen.getEgg();
-
-			Icon icon = optEgg.map(egg -> StandardIcons.getPicture(player, egg, DaycarePlugin.getInstance().getMsgConfig().get(MsgConfigKeys.POKEMON_LORE_PEN)))
-					.orElseGet(() -> Icon.from(ItemStack.builder().itemType(ItemTypes.BARRIER).add(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(player, MsgConfigKeys.PEN_NO_EGG)).build()));
-
-			optEgg.ifPresent(egg -> {
-				icon.getDisplay().offer(Keys.ITEM_LORE, MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_PRESENT));
-				icon.addListener(clickable -> {
-					if(clickable.getEvent() instanceof ClickInventoryEvent.Primary) {
-						Optional<PlayerStorage> optStor = PixelmonStorage.pokeBallManager.getPlayerStorage((EntityPlayerMP) clickable.getPlayer());
-						optStor.ifPresent(storage -> {
-							storage.addToParty(egg.getPokemon());
-							storage.sendUpdatedList();
-							this.ranch.getStats().incrementStat(Statistics.Stats.EGGS_COLLECTED);
-							clickable.getPlayer().sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_CLAIM));
-						});
-					} else {
-						this.ranch.getStats().incrementStat(Statistics.Stats.EGGS_DELETED);
-						clickable.getPlayer().sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_DISMISSED));
-					}
-					this.pen.setEgg(null);
-					getDisplay().setSlot(13, Icon.from(ItemStack.builder().itemType(ItemTypes.BARRIER).add(Keys.DISPLAY_NAME, Text.of(TextColors.RED, "No Egg Available...")).build()));
-					this.drawBorder(player);
-				});
-			});
-
-			builder = builder.slot(icon, 13);
+			builder = builder.slot(this.eggIcon(player), 13);
 		}
 		return builder;
+	}
+
+	private Icon eggIcon(Player player) {
+		Optional<Pokemon> optEgg = this.pen.getEgg();
+
+		Icon icon = optEgg.map(egg -> StandardIcons.getPicture(player, egg, DaycarePlugin.getInstance().getMsgConfig().get(MsgConfigKeys.POKEMON_LORE_PEN)))
+				.orElseGet(() -> Icon.from(ItemStack.builder().itemType(ItemTypes.BARRIER).add(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(player, MsgConfigKeys.PEN_NO_EGG)).build()));
+
+		optEgg.ifPresent(egg -> {
+			icon.getDisplay().offer(Keys.ITEM_LORE, MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_PRESENT));
+			icon.addListener(clickable -> {
+				if(clickable.getEvent() instanceof ClickInventoryEvent.Primary) {
+					Optional<PlayerStorage> optStor = PixelmonStorage.pokeBallManager.getPlayerStorage((EntityPlayerMP) clickable.getPlayer());
+					optStor.ifPresent(storage -> {
+						storage.addToParty(egg.getPokemon());
+						storage.sendUpdatedList();
+						this.ranch.getStats().incrementStat(Statistics.Stats.EGGS_COLLECTED);
+						clickable.getPlayer().sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_CLAIM));
+					});
+				} else {
+					this.ranch.getStats().incrementStat(Statistics.Stats.EGGS_DELETED);
+					clickable.getPlayer().sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_DISMISSED));
+				}
+				this.pen.setEgg(null);
+				getDisplay().setSlot(13, Icon.from(NO_EGG));
+				this.updateBorder(player);
+			});
+		});
+		return icon;
 	}
 
 	private void drawBorder(Player player) {
@@ -201,8 +235,38 @@ public class PenUI implements Displayable {
 	 * @param builder The current instance of the layout builder
 	 */
 	private Layout.Builder drawBorder(Player player, Layout.Builder builder) {
-		ItemStack pane = ItemStack.builder().itemType(ItemTypes.STAINED_GLASS_PANE).add(Keys.DISPLAY_NAME, getTitle(player)).add(Keys.DYE_COLOR, getColoring()).build();
-		return builder.border(Icon.from(pane)).slots(Icon.from(pane), 19, 20, 21, 22, 23, 24, 25);
+		Icon border = borderIcon(player);
+		return builder.border(border).slots(border, 19, 20, 21, 22, 23, 24, 25);
+	}
+
+	private Icon borderIcon(Player player) {
+		return Icon.from(ItemStack.builder()
+				.itemType(ItemTypes.STAINED_GLASS_PANE)
+				.add(Keys.DISPLAY_NAME, getTitle(player))
+				.add(Keys.DYE_COLOR, getColoring())
+				.add(Keys.ITEM_LORE, !this.pen.isFull() ? Lists.newArrayList() : this.pen.getInstance().getDescription())
+				.build());
+	}
+
+	private void updateBorder(Player player) {
+		List<Integer> slots = Lists.newArrayList();
+		int i;
+		for(i = 0; i < 9; ++i) {
+			slots.add(i);
+			slots.add(this.display.getDimension().getRows() * this.display.getDimension().getColumns() - i - 1);
+		}
+
+		for(i = 1; i < this.display.getDimension().getRows() - 1; ++i) {
+			slots.add(i * 9);
+			slots.add((i + 1) * 9 - 1);
+		}
+
+		slots.addAll(Lists.newArrayList(19, 20, 21, 22, 23, 24, 25));
+
+		Icon border = borderIcon(player);
+		for(int slot : slots) {
+			this.display.setSlot(slot, border);
+		}
 	}
 
 	private Text getTitle(Player player) {

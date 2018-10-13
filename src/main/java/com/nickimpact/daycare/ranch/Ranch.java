@@ -2,7 +2,8 @@ package com.nickimpact.daycare.ranch;
 
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.DaycarePlugin;
-import com.nickimpact.daycare.api.events.BreedEvent;
+import com.nickimpact.daycare.api.breeding.BreedStyle;
+import com.nickimpact.daycare.api.events.DaycareEvent;
 import com.nickimpact.daycare.configuration.ConfigKeys;
 import com.nickimpact.daycare.exceptions.AlreadyUnlockedException;
 import com.nickimpact.daycare.stats.Statistics;
@@ -12,13 +13,11 @@ import org.mariuszgromada.math.mxparser.Expression;
 import org.mariuszgromada.math.mxparser.Function;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.Instant;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +34,8 @@ public class Ranch {
 	private List<Pen> pens;
 	@Setter private Statistics stats;
 	private Settings settings;
+
+	@Setter private transient BreedStyle style;
 
 	public Ranch(Player player) {
 		this(player.getUniqueId());
@@ -88,7 +89,7 @@ public class Ranch {
 			}
 
 			account.get().withdraw(DaycarePlugin.getInstance().getEconomy().getDefaultCurrency(), price, Sponge.getCauseStackManager().getCurrentCause());
-			this.pens.get(id).unlock();
+			pen.unlock();
 			pen.setPrice(price);
 			return true;
 		}
@@ -96,11 +97,8 @@ public class Ranch {
 		return false;
 	}
 
-	public boolean addToPen(Pokemon pokemon, int id) {
+	public void addToPen(Pokemon pokemon, int id) {
 		Pen pen = this.pens.get(id);
-		if(pen.isFull()) {
-			return false;
-		}
 
 		if(!pen.getAtPosition(1).isPresent()) {
 			pen.setSlot1(pokemon);
@@ -109,44 +107,19 @@ public class Ranch {
 		}
 
 		// Update the date so that the timer can start evaluating breeding conditions
-		if(pen.isFull() && pen.canBreed()) {
-			pen.setReadyPoint(Date.from(Instant.now()));
+		if(pen.isFull()) {
+			pen.initialize(ownerUUID);
 		}
 
 		DaycarePlugin.getInstance().getStorage().updateRanch(this);
-		return true;
-	}
-
-	/**
-	 * For each pen in this ranch, attempt to breed the parent pokemon, if there are enough. As always, first check
-	 * to ensure that the pen itself is unlocked, and that breeding is deemed acceptable for the current iteration.
-	 */
-	public boolean attemptBreeding() {
-		boolean bred = false;
-		int id = 0;
-		for(Pen pen : this.pens) {
-			if(pen.isUnlocked() && pen.willBreed()) {
-				Pokemon offspring = pen.breed();
-				BreedEvent event = new BreedEvent(this.ownerUUID, id, pen.getAtPosition(1).get(), pen.getAtPosition(2).get(), offspring);
-				Sponge.getEventManager().post(event);
-
-				if(!event.isCancelled()) {
-					pen.setEgg(offspring);
-					stats.incrementStat(Statistics.Stats.EGGS_PRODUCED);
-					bred = true;
-				}
-			}
-			id++;
-		}
-		if(bred) {
-			DaycarePlugin.getInstance().getStorage().updateRanch(this);
-		}
-
-		return bred;
 	}
 
 	public Pen getPen(int id) {
 		return this.pens.get(id);
+	}
+
+	public void shutdown() {
+		this.pens.forEach(Pen::halt);
 	}
 
 	@Setter

@@ -21,7 +21,7 @@ public class DaycareInfo implements PluginInfo {
 	public static final String ID = "daycare";
 
 	public static final String NAME = "Daycare";
-	public static final String VERSION = "S7.1-0.8.0-Beta";
+	public static final String VERSION = "S7.1-0.11.0-Beta";
 	public static final String DESCRIPTION = "A Sponge Representation of the Pokemon Daycare";
 
 	public static final Text PREFIX = Text.of(TextColors.YELLOW, "Daycare ", TextColors.GRAY, "\u00bb ", TextColors.DARK_AQUA);
@@ -52,26 +52,6 @@ public class DaycareInfo implements PluginInfo {
 	@Override
 	public String getDescription() {
 		return DESCRIPTION;
-	}
-
-	@Override
-	public Text prefix() {
-		return PREFIX;
-	}
-
-	@Override
-	public Text error() {
-		return ERROR_PREFIX;
-	}
-
-	@Override
-	public Text warning() {
-		return ERROR_PREFIX;
-	}
-
-	@Override
-	public Text debug() {
-		return DEBUG_PREFIX;
 	}
 
 	public enum Dependencies {

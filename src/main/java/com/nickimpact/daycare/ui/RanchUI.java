@@ -18,10 +18,14 @@ import io.github.nucleuspowered.nucleus.api.exceptions.NucleusException;
 import org.mariuszgromada.math.mxparser.Expression;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.data.DataTransactionResult;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.manipulator.mutable.item.EnchantmentData;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.enchantment.Enchantment;
+import org.spongepowered.api.item.enchantment.EnchantmentTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
 import org.spongepowered.api.text.Text;
@@ -49,7 +53,7 @@ public class RanchUI implements Displayable {
 		this.display = UI.builder()
 				.title(MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.RANCH_UI_TITLE, null, null))
 				.dimension(InventoryDimension.of(9, 6))
-				.build(player, DaycarePlugin.getInstance())
+				.build(DaycarePlugin.getInstance())
 				.define(setupDisplay(player));
 	}
 
@@ -107,7 +111,7 @@ public class RanchUI implements Displayable {
 			icon.addListener(clickable -> {
 				Sponge.getScheduler().createTaskBuilder().execute(() -> {
 					clickable.getPlayer().closeInventory();
-					new PenUI(clickable.getPlayer(), ranch, pen, id).open();
+					new PenUI(clickable.getPlayer(), ranch, pen, id).open(player);
 				}).delayTicks(1).submit(DaycarePlugin.getInstance());
 			});
 		} else {
@@ -156,12 +160,22 @@ public class RanchUI implements Displayable {
 					variables.put("dummy", pokemon.getPokemon());
 					variables.put("dummy2", pokemon);
 					return MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.RANCH_UI_PEN_INFO, tokens, variables);
-				}).orElse(MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.RANCH_UI_PEN_EMPTY, tokens, null));
+		}).orElse(MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.RANCH_UI_PEN_EMPTY, tokens, null));
 	}
 
 	private Layout.Builder playerIcon(Player player, Layout.Builder builder) {
 		ItemStack skull = ItemUtils.createSkull(player.getUniqueId(), MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.RANCH_UI_PLAYER_INFO, null, null), Lists.newArrayList());
-		return builder.slot(Icon.from(skull), 38);
+		Icon test = Icon.from(skull);
+		test.addListener(clickable -> {
+			EnchantmentData ed = skull.getOrCreate(EnchantmentData.class).get();
+			ed.setElements(ed.enchantments().add(Enchantment.of(EnchantmentTypes.UNBREAKING, 1)).get());
+			skull.offer(ed);
+			test.setDisplay(skull);
+
+			this.display.setSlot(38, test);
+		});
+
+		return builder.slot(test, 38);
 	}
 
 	private Layout.Builder settingsIcon(Player player, Layout.Builder builder) {
@@ -172,8 +186,8 @@ public class RanchUI implements Displayable {
 				.add(Keys.HIDE_MISCELLANEOUS, true)
 				.build());
 		icon.addListener(clickable -> {
-			this.close();
-			new SettingsUI(player, this.ranch).open();
+			this.close(player);
+			new SettingsUI(player, this.ranch).open(player);
 		});
 		return builder.slot(icon, 40);
 	}

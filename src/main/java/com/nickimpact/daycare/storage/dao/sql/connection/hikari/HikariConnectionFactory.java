@@ -90,7 +90,7 @@ public abstract class HikariConnectionFactory extends AbstractConnectionFactory 
 
 	@Override
 	public void shutdown() throws Exception {
-		if(hikari != null)
+		if(hikari != null && !hikari.isClosed())
 			hikari.close();
 	}
 

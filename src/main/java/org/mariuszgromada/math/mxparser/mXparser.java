@@ -115,8 +115,8 @@ public final class mXparser {
 	/**
 	 * Console output string  for below methods
 	 *
-	 * @see mXparser.#consolePrintln(Object)
-	 * @see mXparser.#consolePrint(Object)
+	 * @see mXparser#consolePrintln(Object)
+	 * @see mXparser#consolePrint(Object)
 	 */
 	private static String CONSOLE_OUTPUT = "";
 	private static String CONSOLE_PREFIX = "[mXparser-v." + VERSION + "] ";

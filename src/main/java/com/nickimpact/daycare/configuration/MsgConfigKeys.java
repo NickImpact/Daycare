@@ -31,6 +31,8 @@ import com.nickimpact.impactor.api.configuration.ConfigKey;
 import com.nickimpact.impactor.api.configuration.IConfigKeys;
 import com.nickimpact.impactor.api.configuration.keys.ListKey;
 import com.nickimpact.impactor.api.configuration.keys.StringKey;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -55,8 +57,15 @@ public class MsgConfigKeys implements IConfigKeys {
 			"&7Eggs Dismissed: &e{{stats_eggs_dismissed}}",
 			"&7Ratio: &e{{stats_eggs_ratio}}"
 	));
+	public static final ConfigKey<String> MUST_COLLECT_EGG_FIRST = StringKey.of("general.pen.must-claim-egg", "{{daycare_error}} &7You must collect the available egg before collecting your pokemon...");
 	public static final ConfigKey<List<String>> EVOLVE = ListKey.of("general.ranch.evolve", Lists.newArrayList(
 			"{{daycare_prefix}} &7Your &e{{pokemon_before_evo}} &7has evolved into a &e{{pokemon_after_evo}}&7 after leveling up in the daycare!"
+	));
+	public static final ConfigKey<List<String>> LEARN_MOVE = ListKey.of("general.ranch.learn-move", Lists.newArrayList(
+			"{{daycare_prefix}} &7Your &e{{pokemon}} &7leveled up, and ended up learning &e{{pokemon_new_move}}!"
+	));
+	public static final ConfigKey<List<String>> LEARN_MOVE_REPLACE = ListKey.of("general.ranch.learn-move-and-replace-old", Lists.newArrayList(
+			"{{daycare_prefix}} &7Your &e{{pokemon}} &7leveled up, and ended up learning &e{{pokemon_new_move}} &7in replacement of &c{{pokemon_old_move}}&7!"
 	));
 	public static final ConfigKey<List<String>> EGGS_AVAILABLE = ListKey.of("general.ranch.eggs-available", Collections.singletonList(
 			"{{daycare_prefix}} &7New eggs are now available in your ranch!"
@@ -77,9 +86,11 @@ public class MsgConfigKeys implements IConfigKeys {
 
 	// Start Up
 	public static final ConfigKey<List<String>> STARTUP_NO_ECONOMY_SERVICE = ListKey.of("startup.error.no-economy-service", Lists.newArrayList(
-			"Daycare detected that an Economy Service was not present on the server.",
-			"For Daycare to run properly, or at all, an Economy Service is required.",
-			"As such, Daycare will now be disabled to avoid any potential issues..."
+			"&e==============================================================",
+			"&eWARNING: Daycare detected that an Economy Service was not present on the server.",
+			"&eFor Daycare to run properly, or at all, an Economy Service is required.",
+			"&eAs such, Daycare will now be disabled to avoid any potential issues...",
+			"&e=============================================================="
 	));
 	public static final ConfigKey<String> STARTUP_INIT_NUCLEUS = StringKey.of("startup.phase.init.nucleus", "&7Integrating with Nucleus Token Service...");
 	public static final ConfigKey<String> STARTUP_INIT_COMMANDS = StringKey.of("startup.phase.init.commands", "&7Initializing commands...");
@@ -88,20 +99,24 @@ public class MsgConfigKeys implements IConfigKeys {
 	public static final ConfigKey<String> STARTUP_STORAGE_PROVIDER = StringKey.of("startup.phase.init.storage.type", "Loading storage provider... [{{storage_type}}]");
 	public static final ConfigKey<String> STARTUP_INIT_COMPLETE = StringKey.of("startup.phase.init.complete", "Initialization complete!");
 
-	public static final ConfigKey<String> STARTUP_STARTED_PHASE = StringKey.of("startup.phase.server-started.begin", "&7Now entering the init phase...");
-	public static final ConfigKey<String> STARTUP_STARTED_TASKS = StringKey.of("startup.phase.server-started.tasks", "&7Now entering the init phase...");
+	public static final ConfigKey<String> STARTUP_STARTED_PHASE = StringKey.of("startup.phase.server-started.begin", "&7Beginning startup procedures...");
+	public static final ConfigKey<String> STARTUP_STARTED_TASKS = StringKey.of("startup.phase.server-started.tasks", "&7Queuing running tasks...");
 	public static final ConfigKey<String> STARTUP_STARTED_COMPLETE = StringKey.of("startup.phase.server-started.complete", "&7Startup procedures complete!");
 	public static final ConfigKey<String> STARTUP_COMPLETE = StringKey.of("startup.complete", "&7Daycare is now fully initialized!");
 
 	// Commands
 	public static final ConfigKey<String> CMD_NON_PLAYER = StringKey.of("commands.error.non-player", "{{daycare_error}} &7You must be a player to use this command...");
 	public static final ConfigKey<String> CMD_ADDNPC_RIGHTCLICK_NOTICE = StringKey.of("commands.addnpc.right-click-notice", "{{daycare_prefix}} &7Right click on a chatting NPC to set them as a Daycare Representative!");
+	public static final ConfigKey<String> CMD_REMOVENPC_RIGHTCLICK_NOTICE = StringKey.of("commands.removenpc.right-click-notice", "{{daycare_prefix}} &7Right click on a registered Daycare NPC to clear their functionality!");
 	public static final ConfigKey<String> CMD_PRICING_NO_ECONOMY_SERVICE = StringKey.of("commands.pricing.error.no-economy-service", "{{daycare_error}} &7There is no economy service available to perform that action...");
 
 
 	// Admin
 	public static final ConfigKey<List<String>> NPC_REGISTERED = ListKey.of("admin.npcs.register", Collections.singletonList(
 			"{{daycare_prefix}} &7You've added this NPC as a Daycare Representative!"
+	));
+	public static final ConfigKey<List<String>> NPC_DELETED = ListKey.of("admin.npcs.remove", Collections.singletonList(
+			"{{daycare_prefix}} &7You've removed this NPC of its role as a Daycare Representative!"
 	));
 
 	// Pens
@@ -166,10 +181,11 @@ public class MsgConfigKeys implements IConfigKeys {
 	public static final ConfigKey<String> PEN_TITLES_BREEDING = StringKey.of("ui.pen.border.breeding-title", "&aBreeding...");
 	public static final ConfigKey<String> PEN_TITLES_EGG_AVAILABLE = StringKey.of("ui.pen.border.egg-available", "&6Egg Available!");
 	public static final ConfigKey<String> PEN_TITLES_UNABLE = StringKey.of("ui.pen.border.unable-to-breed", "&cUnable to breed...");
-	public static final ConfigKey<String> PEN_UNLOCK = StringKey.of("ui.pen.pen-info-title", "&ePen Info");
-	public static final ConfigKey<List<String>> PEN_UNLOCK_LORE = ListKey.of("ui.pen.pen-info-title", Lists.newArrayList(
+	public static final ConfigKey<String> PEN_HISTORY = StringKey.of("ui.pen.pen-info.title", "&ePen Info");
+	public static final ConfigKey<List<String>> PEN_HISTORY_LORE = ListKey.of("ui.pen.pen-info.lore", Lists.newArrayList(
 			"&7Date Unlocked: &e{{date_unlocked}}",
-			"&7Price: &a{{price}}"
+			"&7Price: &a{{price}}",
+			"&7Eggs Forged: &e{{total_eggs_produced}}"
 	));
 
 	// Selection UI
@@ -196,9 +212,6 @@ public class MsgConfigKeys implements IConfigKeys {
 
 	// PC UI
 	public static final ConfigKey<String> PC_TITLE = StringKey.of("ui.pc.title", "&cDaycare &7\u00bb &3PC");
-	public static final ConfigKey<String> PC_LEFT = StringKey.of("ui.pc.last-page", "&c\u2190 Last Page \u2190");
-	public static final ConfigKey<String> PC_RIGHT = StringKey.of("ui.pc.next-page", "&a\u2192 Next Page \u2192");
-	public static final ConfigKey<String> PC_CURR = StringKey.of("ui.pc.current-page", "&eCurrent Page: {{page}}");
 
 	// Settings UI
 	public static ConfigKey<String> SETTINGS_UI_TITLE = StringKey.of("ui.settings.title", "&cDaycare &7\u00bb &3Settings");
@@ -213,7 +226,7 @@ public class MsgConfigKeys implements IConfigKeys {
 			"&7the leveling setting to",
 			"&7be enabled!",
 			"",
-			"&cREQUIRES PIXELMON 6.3"
+			"&cREQUIRES PIXELMON 6.3.X AND UP!"
 	));
 	public static ConfigKey<String> SETINGS_LEVEL_TITLE = StringKey.of("ui.settings.items.leveling-title", "&eAllow leveling?");
 	public static final ConfigKey<List<String>> SETTINGS_LEVEL_LORE = ListKey.of("ui.settings.items.leveling-lore", Lists.newArrayList(

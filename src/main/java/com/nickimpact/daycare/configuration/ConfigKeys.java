@@ -54,12 +54,24 @@ public class ConfigKeys implements IConfigKeys {
 			c.getString("storage.data.connection-info.username", null),
 			c.getString("storage.data.connection-info.password", null)
 	)));
-	public static final ConfigKey<Long> MAX_BREEDING_WAIT_TIME = LongKey.of("breeding.max-wait", 50);
-	public static final ConfigKey<Double> EGG_CHANCE = DoubleKey.of("breeding.egg-chance", 15.0);
 	public static final ConfigKey<Long> LVL_WAIT_TIME = LongKey.of("leveling.wait-time", 60);
 	public static final ConfigKey<Integer> LVL_TASK_TIME = IntegerKey.of("leveling.task-run", 60);
-	public static final ConfigKey<Integer> BREEDING_TASK_TIME = IntegerKey.of("breeding.task-run", 300);
 	public static final ConfigKey<Double> PRICE_PER_LVL = DoubleKey.of("leveling.price-per-level", 100.0);
+
+	public static final ConfigKey<Boolean> LEVELING_ENABLED = BooleanKey.of("leveling.enabled", true);
+	public static final ConfigKey<Boolean> BREEDING_ENABLED = BooleanKey.of("breeding.enabled", true);
+
+	// Breeding style options
+	public static final ConfigKey<String> BREED_STYLE = StringKey.of("breeding.styles.method", "timed-chance");
+
+	public static final ConfigKey<Long> BREED_TIMED_MIN_WAIT = LongKey.of("breeding.styles.timed-chance.min-wait", 15);
+	public static final ConfigKey<Long> BREED_TIMED_MAX_WAIT = LongKey.of("breeding.styles.timed-chance.max-wait", 60);
+	public static final ConfigKey<Double> BREED_TIMED_EGG_CHANCE = DoubleKey.of("breeding.styles.timed-chance.egg-chance", 25.0);
+	public static final ConfigKey<Integer> BREED_TIMED_CHECK_PERIOD = IntegerKey.of("breeding.styles.timed-chance.check-period", 300);
+	public static final ConfigKey<Long> BREED_TIMED_UPDATE_INTERVAL = LongKey.of("breeding.styles.timed-chance.update-interval", 1);
+	public static final ConfigKey<Long> BREED_PNATIVE_DELAY = LongKey.of("breeding.styles.pixelmon-native.stage-delay", 5);
+	public static final ConfigKey<Long> BREED_PNATIVE_INTERVAL = LongKey.of("breeding.styles.pixelmon-native.stage-interval", 5);
+	public static final ConfigKey<Long> GENERAL_UPDATE_PERIOD = LongKey.of("general.update-period", 5);
 
 	private static Map<String, ConfigKey<?>> KEYS = null;
 

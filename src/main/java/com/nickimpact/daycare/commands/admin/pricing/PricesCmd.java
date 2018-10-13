@@ -83,7 +83,7 @@ public class PricesCmd extends SpongeSubCommand {
 
 		String exp = args.<String>getOne(equation).get();
 		if(!exp.contains("b") || !exp.contains("i") || !exp.contains("p")) {
-			throw new CommandException(Text.of("Your equation must make use of the three variables: b = base, i = increment, y = pen-ID - 1"));
+			throw new CommandException(Text.of("Your equation must make use of the three variables: b = base, p = increment, i = pen-ID - 1"));
 		}
 		double ba = args.<Double>getOne(base).get();
 		double inc = args.<Double>getOne(increment).get();

@@ -53,7 +53,7 @@ public class DaycareCmd extends SpongeCommand {
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
 		if(src instanceof Player) {
-			new RanchUI((Player)src).open();
+			new RanchUI((Player)src).open((Player)src);
 		}
 
 		return CommandResult.success();

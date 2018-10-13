@@ -52,6 +52,8 @@ public interface Storage {
 
 	CompletableFuture<Void> updateRanch(Ranch ranch);
 
+	CompletableFuture<Void> updateAll(List<Ranch> ranch);
+
 	CompletableFuture<Void> deleteRanch(UUID uuid);
 
 	CompletableFuture<Ranch> getRanch(UUID uuid);

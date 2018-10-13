@@ -11,6 +11,7 @@ import com.nickimpact.impactor.api.configuration.ConfigKey;
 import com.nickimpact.impactor.gui.v2.Icon;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
 import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
+import com.pixelmonmod.pixelmon.items.ItemPixelmonSprite;
 import com.pixelmonmod.pixelmon.storage.NbtKeys;
 import com.pixelmonmod.pixelmon.util.helpers.SpriteHelper;
 import io.github.nucleuspowered.nucleus.api.exceptions.NucleusException;

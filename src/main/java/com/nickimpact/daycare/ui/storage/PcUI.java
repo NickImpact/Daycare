@@ -1,6 +1,6 @@
 package com.nickimpact.daycare.ui.storage;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.nickimpact.daycare.DaycarePlugin;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.ranch.Pen;
@@ -9,11 +9,8 @@ import com.nickimpact.daycare.ranch.Ranch;
 import com.nickimpact.daycare.ui.PenUI;
 import com.nickimpact.daycare.ui.StandardIcons;
 import com.nickimpact.daycare.utils.MessageUtils;
-import com.nickimpact.impactor.gui.v2.Displayable;
-import com.nickimpact.impactor.gui.v2.Icon;
-import com.nickimpact.impactor.gui.v2.Layout;
-import com.nickimpact.impactor.gui.v2.UI;
-import com.pixelmonmod.pixelmon.config.PixelmonConfig;
+import com.nickimpact.impactor.gui.v2.*;
+import com.pixelmonmod.pixelmon.api.pokemon.PokemonSpec;
 import com.pixelmonmod.pixelmon.config.PixelmonEntityList;
 import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
 import com.pixelmonmod.pixelmon.storage.ComputerBox;
@@ -25,7 +22,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.entity.living.player.Player;
@@ -33,57 +29,60 @@ import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
+import org.spongepowered.api.item.inventory.property.InventoryTitle;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.serializer.TextSerializers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
-public class PcUI implements Displayable {
+public class PcUI implements PageDisplayable {
+
+	private final PokemonSpec UNBREEDABLE = new PokemonSpec("unbreedable");
 
 	private Ranch ranch;
 	private Pen pen;
+	private int penID;
 	private int slot;
-	private UI display;
+	private Page display;
 
 	/** The player's PC at time of use */
-	private Map<Integer, List<PCRepresentable>> pc;
-
-	/** The current page of the PC */
-	private int page;
-
-	private Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-	private final String PAGE_TOKEN = "page";
-
-	private final int MAX_PAGES = PixelmonConfig.computerBoxes;
+	private List<PCRepresentable> pc;
 
 	private Selection selection;
 
 	public PcUI(Player player, Ranch ranch, Pen pen, int penID, int slot) {
 		this.ranch = ranch;
 		this.pen = pen;
+		this.penID = penID;
 		this.slot = slot;
 		this.pc = getBoxContents(player);
-		this.page = 1;
 
-		this.display = UI.builder()
-				.property(InventoryDimension.of(9, 6))
-				.title(TextSerializers.FORMATTING_CODE.deserialize(DaycarePlugin.getInstance().getMsgConfig().get(MsgConfigKeys.PC_TITLE)))
-				.build(player, DaycarePlugin.getInstance())
-				.define(setupDisplay(player, penID, slot));
+		this.display = Page.builder()
+				.property(InventoryTitle.of(MessageUtils.fetchMsg(player, MsgConfigKeys.PC_TITLE)))
+				.layout(this.buildBaseDesign(player))
+				.previous(Icon.from(
+						ItemStack.builder()
+								.itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:trade_holder_left").orElse(ItemTypes.BARRIER))
+								.build()
+				), 51)
+				.current(Icon.from(
+						ItemStack.builder()
+								.itemType(ItemTypes.PAPER)
+								.build()
+				), 52)
+				.next(Icon.from(
+						ItemStack.builder()
+								.itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:trade_holder_right").orElse(ItemTypes.BARRIER))
+								.build()
+				), 53)
+				.build(DaycarePlugin.getInstance())
+				.define(this.forgePCIcons(player), InventoryDimension.of(6, 5));
 	}
 
-	@Override
-	public UI getDisplay() {
-		return this.display;
-	}
-
-	private Layout setupDisplay(Player player, int penID, int slot) {
-		Layout.Builder builder = Layout.builder()
+	private Layout buildBaseDesign(Player player) {
+		Layout.Builder builder = Layout.builder().dimension(InventoryDimension.of(9, 6))
 				.slots(Icon.BORDER, 6, 7, 8, 15, 17, 24, 26, 33, 35, 42, 43, 44, 45, 46, 47, 48, 49, 50);
 
 		Icon none = Icon.from(
@@ -94,97 +93,35 @@ public class PcUI implements Displayable {
 		);
 		builder = builder.slot(none, 16);
 
-		Icon back = Icon.from(ItemStack.builder().itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:eject_button").get()).add(Keys.DISPLAY_NAME, Text.of(TextColors.RED, "Go Back ")).build());
+		Icon back = Icon.from(ItemStack.builder().itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:eject_button").get()).add(Keys.DISPLAY_NAME, Text.of(TextColors.RED, "Go Back")).build());
 		back.addListener(clickable -> {
-			this.close();
-			new PartyUI(clickable.getPlayer(), this.ranch, this.pen, penID, slot).open();
+			this.display.close(player);
+			new PartyUI(clickable.getPlayer(), this.ranch, this.pen, penID, slot).open(player);
 		});
 		builder = builder.slot(back, 34);
-
-		// We are going to simply just draw the first page here
-		builder = this.drawPage(builder, player, 1, penID);
-
-		tokens.put(PAGE_TOKEN, src -> Optional.of(Text.of(this.page)));
-		Icon curr = Icon.from(
-				ItemStack.builder()
-						.itemType(ItemTypes.PAPER)
-						.add(Keys.DISPLAY_NAME, MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.PC_CURR, tokens, null))
-						.build()
-		);
-		builder = builder.slot(curr, 52);
-
-		Icon last = Icon.from(
-				ItemStack.builder()
-						.itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:trade_holder_left").orElse(ItemTypes.BARRIER))
-						.add(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(player, MsgConfigKeys.PC_LEFT))
-						.build()
-		);
-		builder = builder.slot(last, 51);
-
-		Icon next = Icon.from(
-				ItemStack.builder()
-						.itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:trade_holder_right").orElse(ItemTypes.BARRIER))
-						.add(Keys.DISPLAY_NAME, MessageUtils.fetchMsg(player, MsgConfigKeys.PC_RIGHT))
-						.build()
-		);
-		builder = builder.slot(next, 53);
-
-		final Layout.Builder copy = builder;
-		last.addListener(clickable -> {
-			Layout.Builder copy2 = copy;
-			if(this.page == 1) {
-				this.page = MAX_PAGES;
-			} else {
-				this.page -= 1;
-			}
-
-			this.tokens.put(PAGE_TOKEN, src -> Optional.of(Text.of(this.page)));
-			copy2 = this.drawPage(copy2, player, this.page, penID);
-			Icon current = Icon.from(
-					ItemStack.builder()
-							.itemType(ItemTypes.PAPER)
-							.add(Keys.DISPLAY_NAME, MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.PC_CURR, tokens, null))
-							.build()
-			);
-			copy2 = copy2.slot(current, 52);
-			this.display.define(copy2.build());
-		});
-		next.addListener(clickable -> {
-			Layout.Builder copy2 = copy;
-			if(this.page == MAX_PAGES) {
-				this.page = 1;
-			} else {
-				this.page += 1;
-			}
-
-			this.tokens.put(PAGE_TOKEN, src -> Optional.of(Text.of(this.page)));
-			copy2 = this.drawPage(copy2, player, this.page, penID);
-			Icon current = Icon.from(
-					ItemStack.builder()
-							.itemType(ItemTypes.PAPER)
-							.add(Keys.DISPLAY_NAME, MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.PC_CURR, tokens, null))
-							.build()
-			);
-			copy2 = copy2.slot(current, 52);
-			this.display.define(copy2.build());
-		});
 
 		return builder.build();
 	}
 
-	private Layout.Builder drawPage(Layout.Builder builder, Player player, int box, int penID) {
-		for(int y = 0; y < 5; y++) {
-			for(int x = 0; x < 6; x++) {
-				Optional<EntityPixelmon> optPoke = this.get(player, box, x + (6 * y));
-				if(optPoke.isPresent()) {
-					EntityPixelmon pokemon = optPoke.get();
-					Icon icon = StandardIcons.getPicture(player, new Pokemon(pokemon), DaycarePlugin.getInstance().getMsgConfig().get(MsgConfigKeys.POKEMON_LORE_SELECT));
+	private List<Icon> forgePCIcons(Player player) {
+		List<Icon> icons = Lists.newArrayList();
+		int index = 0;
+		for(PCRepresentable pcr : this.getBoxContents(player)) {
+			Optional<EntityPixelmon> optPoke = pcr.get().map(nbt -> (EntityPixelmon) PixelmonEntityList.createEntityFromNBT(nbt, (World)player.getWorld()));
+			if(optPoke.isPresent()) {
+				EntityPixelmon pokemon = optPoke.get();
+				Icon icon = StandardIcons.getPicture(player, new Pokemon(pokemon), DaycarePlugin.getInstance().getMsgConfig().get(MsgConfigKeys.POKEMON_LORE_SELECT));
 
-					final int X = x;
-					final int Y = y;
+				if(!pokemon.isEgg) {
+					final int i = index;
 					icon.addListener(clickable -> {
+						if(this.UNBREEDABLE.matches(pokemon)) {
+							player.sendMessage(Text.of(DaycarePlugin.getInstance().getPluginInfo().error(), TextColors.GRAY, "That pokemon is marked as unbreedable..."));
+							return;
+						}
+
 						PlayerComputerStorage stor = PixelmonStorage.computerManager.getPlayerStorage((EntityPlayerMP) player);
-						this.selection = new Selection(pokemon, X + (6 * Y));
+						this.selection = new Selection(pokemon, pcr.pos);
 
 						Icon confirm = Icon.from(
 								ItemStack.builder()
@@ -194,31 +131,38 @@ public class PcUI implements Displayable {
 										.build()
 						);
 						confirm.addListener(clickable1 -> {
-							stor.getBox(box).changePokemon(X + (6 * Y), null);
+							stor.getBox(i / 30).changePokemon(pcr.pos, null);
 							Pokemon rep = new Pokemon(this.selection.getPokemon());
-							if(this.slot == 1) {
+							if (this.slot == 1) {
 								this.pen.setSlot1(rep);
 							} else {
 								this.pen.setSlot2(rep);
 							}
+							if(this.pen.isFull()) {
+								this.pen.initialize(ranch.getOwnerUUID());
+							}
 							clickable.getPlayer().closeInventory();
-							new PenUI(display.getPlayer(), this.ranch, this.pen, penID).open();
+							new PenUI(player, this.ranch, this.pen, penID).open(player);
 						});
-						this.display.setSlot(16, confirm);
+						this.display.apply(confirm, 16);
 					});
-					builder.slot(icon, x + (9 * y));
 				}
+				icons.add(icon);
+			} else {
+				icons.add(Icon.EMPTY);
 			}
+
+			++index;
 		}
 
-		return builder;
+		return icons;
 	}
 
-	private Map<Integer, List<PCRepresentable>> getBoxContents(Player player) {
-		Map<Integer, List<PCRepresentable>> contents = Maps.newTreeMap();
+	private List<PCRepresentable> getBoxContents(Player player) {
+		List<PCRepresentable> contents = Lists.newArrayList();
 		PlayerComputerStorage storage = PixelmonStorage.computerManager.getPlayerStorage((EntityPlayerMP) player);
 		for(ComputerBox box : storage.getBoxList()) {
-			contents.put(box.position, getPokemonInBox(box));
+			contents.addAll(getPokemonInBox(box));
 		}
 
 		return contents;
@@ -234,8 +178,12 @@ public class PcUI implements Displayable {
 	}
 
 	private Optional<EntityPixelmon> get(Player player, int box, int pos){
-		List<PCRepresentable> page = this.pc.get(box - 1);
-		return page.get(pos).get().map(nbt -> (EntityPixelmon) PixelmonEntityList.createEntityFromNBT(nbt, (World)player.getWorld()));
+		return pc.get(30 * (box - 1) + pos).get().map(nbt -> (EntityPixelmon) PixelmonEntityList.createEntityFromNBT(nbt, (World)player.getWorld()));
+	}
+
+	@Override
+	public Page getDisplay() {
+		return this.display;
 	}
 
 	@RequiredArgsConstructor

@@ -52,6 +52,8 @@ public abstract class AbstractDao {
 
 	public abstract void updateRanch(Ranch ranch) throws Exception;
 
+	public abstract void updateAll(List<Ranch> ranches) throws Exception;
+
 	public abstract void deleteRanch(UUID uuid) throws Exception;
 
 	public abstract Ranch getRanch(UUID uuid) throws Exception;

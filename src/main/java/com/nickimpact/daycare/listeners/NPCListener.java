@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.nickimpact.daycare.DaycareInfo;
 import com.nickimpact.daycare.DaycarePlugin;
 import com.nickimpact.daycare.commands.admin.AddNPCCmd;
+import com.nickimpact.daycare.commands.admin.RemoveNPCCmd;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.ranch.DaycareNPC;
 import com.nickimpact.daycare.ranch.Ranch;
@@ -38,6 +39,14 @@ public class NPCListener {
 				DaycarePlugin.getInstance().addNPC(dNPC);
 				player.sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.NPC_REGISTERED));
 				AddNPCCmd.getAdding().remove(player.getUniqueId());
+			} else if(RemoveNPCCmd.getRemoving().containsKey(player.getUniqueId())) {
+				Optional<DaycareNPC> dNpc = DaycarePlugin.getInstance().getNpcs().stream().filter(npc -> npc.getUuid().equals(e.getTargetEntity().getUniqueId())).findAny();
+				dNpc.ifPresent(npc -> {
+					e.setCancelled(true);
+					DaycarePlugin.getInstance().deleteNPC(npc);
+					player.sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.NPC_DELETED));
+					RemoveNPCCmd.getRemoving().remove(player.getUniqueId());
+				});
 			} else {
 				Optional<DaycareNPC> dNpc = DaycarePlugin.getInstance().getNpcs().stream().filter(npc -> npc.getUuid().equals(e.getTargetEntity().getUniqueId())).findAny();
 				dNpc.ifPresent(npc -> {
@@ -50,7 +59,7 @@ public class NPCListener {
 
 	private ArrayList<Dialogue> forgeDialogue(Player player, String name) {
 		ArrayList<Dialogue> prompt = Lists.newArrayList();
-		for(Text text : MessageUtils.fetchMsgs(player, MsgConfigKeys.NPC_INTERACT_DIALOGUE)) {
+		for (Text text : MessageUtils.fetchMsgs(player, MsgConfigKeys.NPC_INTERACT_DIALOGUE)) {
 			prompt.add(Dialogue.builder()
 					.setName(name)
 					.setText(text.toPlain())
@@ -59,8 +68,8 @@ public class NPCListener {
 		}
 
 		Ranch ranch = DaycarePlugin.getInstance().getRanches().stream().filter(r -> r.getOwnerUUID().equals(player.getUniqueId())).findAny().get();
-		if(ranch.getPens().stream().anyMatch(p -> p.getEgg().isPresent())) {
-			for(Text text : MessageUtils.fetchMsgs(player, MsgConfigKeys.NPC_INTERACT_DIALOGUE_EGGS)) {
+		if (ranch.getPens().stream().anyMatch(p -> p.getEgg().isPresent())) {
+			for (Text text : MessageUtils.fetchMsgs(player, MsgConfigKeys.NPC_INTERACT_DIALOGUE_EGGS)) {
 				prompt.add(Dialogue.builder()
 						.setName(name)
 						.setText(text.toPlain())
@@ -79,8 +88,8 @@ public class NPCListener {
 										.setHandle(e -> {
 											try {
 												e.setAction(DialogueNextAction.DialogueGuiAction.CLOSE);
-												new RanchUI(player).open();
-											} catch (Exception e1) {}
+												new RanchUI(player).open(player);
+											} catch (Exception ignored) {}
 										})
 										.build()
 						)

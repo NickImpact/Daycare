@@ -66,7 +66,7 @@ public class SelectionUI implements Displayable {
 
 		display = UI.builder()
 				.title(MessageUtils.fetchAndParseMsg(player, MsgConfigKeys.SELECT_TITLE, null, variables))
-				.build(player, DaycarePlugin.getInstance())
+				.build(DaycarePlugin.getInstance())
 				.define(setupDisplay(player, id));
 	}
 
@@ -82,8 +82,8 @@ public class SelectionUI implements Displayable {
 
 		Icon back = Icon.from(ItemStack.builder().itemType(Sponge.getRegistry().getType(ItemType.class, "pixelmon:eject_button").get()).add(Keys.DISPLAY_NAME, Text.of(TextColors.RED, "Go Back ")).build());
 		back.addListener(clickable -> {
-			this.close();
-			new PenUI(clickable.getPlayer(), this.ranch, this.pen, penID).open();
+			this.close(player);
+			new PenUI(clickable.getPlayer(), this.ranch, this.pen, penID).open(player);
 		});
 		lb.slot(back, 13);
 
@@ -116,6 +116,11 @@ public class SelectionUI implements Displayable {
 
 			Optional<UniqueAccount> optAcc = DaycarePlugin.getInstance().getEconomy().getOrCreateAccount(clickable.getPlayer().getUniqueId());
 			optAcc.ifPresent(acc -> {
+				if(acc.getBalance(DaycarePlugin.getInstance().getEconomy().getDefaultCurrency()).compareTo(confirmPrice) < 0) {
+					player.sendMessage(MessageUtils.fetchAndParseMsg(clickable.getPlayer(), MsgConfigKeys.RANCH_UI_PEN_INSUFFICIENT_FUNDS, null, null));
+					return;
+				}
+
 				acc.withdraw(
 						DaycarePlugin.getInstance().getEconomy().getDefaultCurrency(),
 						confirmPrice,
@@ -123,7 +128,7 @@ public class SelectionUI implements Displayable {
 				);
 				Optional<PlayerStorage> optStor = PixelmonStorage.pokeBallManager.getPlayerStorage((EntityPlayerMP) clickable.getPlayer());
 				optStor.ifPresent(stor -> {
-					poke.getLvl().setLevel(poke.getLvl().getLevel() + pokemon.getGainedLvls());
+					poke.getLvl().setLevel(Math.min(100, poke.getLvl().getLevel() + pokemon.getGainedLvls()));
 					stor.addToParty(poke);
 				});
 
@@ -133,13 +138,17 @@ public class SelectionUI implements Displayable {
 					clickable.getPlayer().sendMessages(MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.SELECT_RETRIEVE_EVOLVED, tokens, variables));
 				}
 				clickable.getPlayer().sendMessages(MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.SELECT_RETRIEVE, tokens, variables));
-				this.close();
+				this.close(player);
 				if(this.slot == 1) {
 					this.pen.setSlot1(null);
 				} else {
 					this.pen.setSlot2(null);
 				}
-				new PenUI(clickable.getPlayer(), this.ranch, this.pen, penID).open();
+				if(this.pen.getInstance() != null) {
+					this.pen.halt();
+					this.pen.setInstance(null);
+				}
+				new PenUI(clickable.getPlayer(), this.ranch, this.pen, penID).open(player);
 			});
 		});
 		lb.slot(retrieve, 15);

@@ -3,22 +3,9 @@ package com.nickimpact.daycare.listeners;
 import com.nickimpact.daycare.DaycarePlugin;
 import com.nickimpact.daycare.ranch.Ranch;
 import com.nickimpact.daycare.stats.Statistics;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.block.InteractBlockEvent;
-import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.item.ItemTypes;
-import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
-
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * (Some note will appear here)
@@ -38,6 +25,13 @@ public class ConnectionListener {
 			if(r.getStats() == null) {
 				r.setStats(new Statistics());
 			}
+
+			r.getPens().forEach(pen -> {
+				if(pen.isFull()) {
+					pen.initialize(player.getUniqueId());
+				}
+			});
+
 			DaycarePlugin.getInstance().getRanches().add(r);
 		});
 	}
@@ -46,6 +40,7 @@ public class ConnectionListener {
 	public void onDisconnect(ClientConnectionEvent.Disconnect e) {
 		Player player = e.getTargetEntity();
 		DaycarePlugin.getInstance().getRanches().stream().filter(r -> r.getOwnerUUID().equals(player.getUniqueId())).findAny().ifPresent(ranch -> {
+			ranch.shutdown();
 			DaycarePlugin.getInstance().getStorage().updateRanch(ranch);
 			DaycarePlugin.getInstance().getRanches().remove(ranch);
 		});
