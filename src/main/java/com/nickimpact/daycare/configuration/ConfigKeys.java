@@ -72,6 +72,7 @@ public class ConfigKeys implements IConfigKeys {
 	public static final ConfigKey<Long> BREED_PNATIVE_DELAY = LongKey.of("breeding.styles.pixelmon-native.stage-delay", 5);
 	public static final ConfigKey<Long> BREED_PNATIVE_INTERVAL = LongKey.of("breeding.styles.pixelmon-native.stage-interval", 5);
 	public static final ConfigKey<Long> GENERAL_UPDATE_PERIOD = LongKey.of("general.update-period", 5);
+	public static final ConfigKey<String> RANCH_UNLOCK_MODULE = StringKey.of("pens.unlock-module", "economic");
 
 	private static Map<String, ConfigKey<?>> KEYS = null;
 

@@ -105,6 +105,9 @@ public class PokemonTokens {
 		tokens.put("clones", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
 				getPokemonFromVariableIfExists(m), EnumPokemonFields.CLONES
 		)));
+		tokens.put("enchants", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
+				getPokemonFromVariableIfExists(m), EnumPokemonFields.ENCHANTS
+		)));
 		tokens.put("hidden_power", (p, v, m) -> Optional.of(DaycarePlugin.getInstance().getTextParsingUtils().getPokemonInfo(
 				getPokemonFromVariableIfExists(m), EnumPokemonFields.HIDDEN_POWER
 		)));
@@ -151,7 +154,7 @@ public class PokemonTokens {
 				return Optional.empty();
 			}
 
-			return Optional.of(Text.of(pokemon.getPokemon().getLvl().getLevel() + pokemon.getGainedLvls()));
+			return Optional.of(Text.of(pokemon.getPokemon().getLevel() + pokemon.getGainedLvls()));
 		});
 	}
 
@@ -159,9 +162,9 @@ public class PokemonTokens {
 		return tokens;
 	}
 
-	private static EntityPixelmon getPokemonFromVariableIfExists(Map<String, Object> m) {
-		Optional<Object> optPoke = m.values().stream().filter(val -> val instanceof EntityPixelmon).findAny();
-		return (EntityPixelmon) optPoke.orElse(null);
+	private static com.pixelmonmod.pixelmon.api.pokemon.Pokemon getPokemonFromVariableIfExists(Map<String, Object> m) {
+		Optional<Object> optPoke = m.values().stream().filter(val -> val instanceof com.pixelmonmod.pixelmon.api.pokemon.Pokemon).findAny();
+		return (com.pixelmonmod.pixelmon.api.pokemon.Pokemon) optPoke.orElse(null);
 	}
 
 	private static Pokemon getPokemonObjFromVariableIfExists(Map<String, Object> m) {

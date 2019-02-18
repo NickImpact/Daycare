@@ -14,8 +14,8 @@ import com.nickimpact.impactor.gui.v2.Displayable;
 import com.nickimpact.impactor.gui.v2.Icon;
 import com.nickimpact.impactor.gui.v2.Layout;
 import com.nickimpact.impactor.gui.v2.UI;
-import com.pixelmonmod.pixelmon.storage.PixelmonStorage;
-import com.pixelmonmod.pixelmon.storage.PlayerStorage;
+import com.pixelmonmod.pixelmon.Pixelmon;
+import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
 import net.minecraft.entity.player.EntityPlayerMP;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
@@ -121,13 +121,6 @@ public class PenUI implements Displayable {
 
 			return Optional.of(Text.of(sdf.format(this.pen.getDateUnlocked())));
 		});
-		tokens.put("price", src -> {
-			if(this.pen.getPrice().signum() == -1) {
-				return Optional.of(Text.of("Free!"));
-			}
-
-			return Optional.of(DaycarePlugin.getInstance().getEconomy().getDefaultCurrency().format(this.pen.getPrice()));
-		});
 		tokens.put("total_eggs_produced", src -> Optional.of(Text.of(this.pen.getNumEggsProduced())));
 		history.getDisplay().offer(Keys.ITEM_LORE, MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.PEN_HISTORY_LORE, tokens, null));
 		builder.slot(history, 32);
@@ -191,13 +184,10 @@ public class PenUI implements Displayable {
 			icon.getDisplay().offer(Keys.ITEM_LORE, MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_PRESENT));
 			icon.addListener(clickable -> {
 				if(clickable.getEvent() instanceof ClickInventoryEvent.Primary) {
-					Optional<PlayerStorage> optStor = PixelmonStorage.pokeBallManager.getPlayerStorage((EntityPlayerMP) clickable.getPlayer());
-					optStor.ifPresent(storage -> {
-						storage.addToParty(egg.getPokemon());
-						storage.sendUpdatedList();
-						this.ranch.getStats().incrementStat(Statistics.Stats.EGGS_COLLECTED);
-						clickable.getPlayer().sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_CLAIM));
-					});
+					PlayerPartyStorage storage = Pixelmon.storageManager.getParty(player.getUniqueId());
+					storage.add(egg.getPokemon());
+					this.ranch.getStats().incrementStat(Statistics.Stats.EGGS_COLLECTED);
+					clickable.getPlayer().sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_CLAIM));
 				} else {
 					this.ranch.getStats().incrementStat(Statistics.Stats.EGGS_DELETED);
 					clickable.getPlayer().sendMessages(MessageUtils.fetchMsgs(player, MsgConfigKeys.PEN_EGG_DISMISSED));

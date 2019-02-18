@@ -6,16 +6,16 @@ import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.ranch.Pen;
 import com.nickimpact.daycare.ranch.Pokemon;
 import com.nickimpact.daycare.utils.MessageUtils;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import lombok.AccessLevel;
+import com.pixelmonmod.pixelmon.Pixelmon;
+import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
+import com.pixelmonmod.pixelmon.enums.EnumSpecies;
+import com.pixelmonmod.pixelmon.util.helpers.BreedLogic;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -67,9 +67,10 @@ public interface BreedStyle {
 		public abstract boolean meetsRequirements();
 
 		protected void breed() {
-			EntityPixelmon offspring = new EntityPixelmon(p1.getPokemon().world);
-			offspring.makeEntityIntoEgg(p1.getPokemon(), p2.getPokemon());
-			Pokemon egg = new Pokemon(offspring);
+			com.pixelmonmod.pixelmon.api.pokemon.Pokemon base = BreedLogic.makeEgg(this.p1.getPokemon(), this.p2.getPokemon());
+			if(base == null) return;
+
+			Pokemon egg = new Pokemon(base);
 
 			if(!Sponge.getEventManager().post(new DaycareEvent.Breed(owner, pen, p1, p2, egg))) {
 				Sponge.getServer().getPlayer(owner).ifPresent(player -> {

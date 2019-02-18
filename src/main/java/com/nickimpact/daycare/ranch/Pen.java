@@ -2,11 +2,10 @@ package com.nickimpact.daycare.ranch;
 
 import com.nickimpact.daycare.DaycarePlugin;
 import com.nickimpact.daycare.api.breeding.BreedStyle;
-import com.pixelmonmod.pixelmon.entities.pixelmon.Entity10CanBreed;
+import com.pixelmonmod.pixelmon.util.helpers.BreedLogic;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
@@ -27,7 +26,6 @@ public class Pen {
 	/** Whether the ranch owner owns this pen */
 	@Getter private boolean unlocked = false;
 	@Getter private Date dateUnlocked;
-	@Getter private BigDecimal price;
 	@Getter private int numEggsProduced;
 
 	/** The running task of the breeding cycle for this pen */
@@ -44,10 +42,6 @@ public class Pen {
 
 	public boolean isFull() {
 		return this.slot1 != null && this.slot2 != null;
-	}
-
-	public boolean canBreed() {
-		return Entity10CanBreed.canBreed(slot1.getPokemon(), slot2.getPokemon()) && !this.getEgg().isPresent();
 	}
 
 	public void initialize(UUID owner) {
@@ -79,5 +73,9 @@ public class Pen {
 
 	public Optional<Pokemon> getEgg() {
 		return Optional.ofNullable(this.egg);
+	}
+
+	public boolean canBreed() {
+		return BreedLogic.canBreed(this.slot1.getPokemon(), this.slot2.getPokemon());
 	}
 }

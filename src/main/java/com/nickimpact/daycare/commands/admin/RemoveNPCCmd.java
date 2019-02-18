@@ -36,9 +36,7 @@ public class RemoveNPCCmd extends SpongeSubCommand {
 
 	@Override
 	public CommandElement[] getArgs() {
-		return new CommandElement[]{
-				GenericArguments.remainingJoinedStrings(NAME)
-		};
+		return new CommandElement[0];
 	}
 
 	@Override
@@ -48,7 +46,7 @@ public class RemoveNPCCmd extends SpongeSubCommand {
 
 	@Override
 	public Text getUsage() {
-		return Text.of("/daycare admin setnpc");
+		return Text.of("/daycare admin removenpc");
 	}
 
 	@Override

@@ -4,8 +4,7 @@ package com.nickimpact.daycare.api.events;
 import com.nickimpact.daycare.ranch.Pen;
 import com.nickimpact.daycare.ranch.Pokemon;
 import com.pixelmonmod.pixelmon.battles.attacks.Attack;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import com.pixelmonmod.pixelmon.enums.EnumPokemon;
+import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import lombok.*;
 
 import java.util.UUID;
@@ -57,7 +56,7 @@ public abstract class DaycareEvent extends CancellableEvent {
 		@Override
 		public void setTarget(Pokemon pokemon) {
 			this.offspring = pokemon;
-			this.offspring.getPokemon().isEgg = true;
+			this.offspring.getPokemon().makeEgg();
 		}
 	}
 
@@ -89,9 +88,9 @@ public abstract class DaycareEvent extends CancellableEvent {
 	public static class Evolve extends DaycareEvent {
 
 		private Pokemon pokemon;
-		private EnumPokemon evolution;
+		private EnumSpecies evolution;
 
-		public Evolve(UUID owner, Pen pen, Pokemon pokemon, EnumPokemon evolution) {
+		public Evolve(UUID owner, Pen pen, Pokemon pokemon, EnumSpecies evolution) {
 			super(owner, pen);
 			this.pokemon = pokemon;
 			this.evolution = evolution;
@@ -109,7 +108,7 @@ public abstract class DaycareEvent extends CancellableEvent {
 		 *
 		 * @param pixelmon The pixelmon to set as the target.
 		 */
-		default void setTarget(EntityPixelmon pixelmon) {
+		default void setTarget(com.pixelmonmod.pixelmon.api.pokemon.Pokemon pixelmon) {
 			this.setTarget(new Pokemon(pixelmon));
 		}
 

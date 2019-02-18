@@ -2,6 +2,7 @@ package com.nickimpact.daycare.internal;
 
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.DaycarePlugin;
+import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
 import io.github.nucleuspowered.nucleus.api.NucleusAPI;
 import io.github.nucleuspowered.nucleus.api.exceptions.NucleusException;
@@ -77,9 +78,9 @@ public class TextParsingUtils {
 		return Text.of(DaycarePlugin.getInstance().getEconomy().getDefaultCurrency().format(BigDecimal.ZERO));
 	}
 
-	public Text getPokemonInfo(EntityPixelmon pokemon, EnumPokemonFields field) {
+	public Text getPokemonInfo(Pokemon pokemon, EnumPokemonFields field) {
 		if(pokemon != null) {
-			if(pokemon.isEgg) {
+			if(pokemon.isEgg()) {
 				if(field.equals(EnumPokemonFields.NAME)) {
 					return Text.of(field.function.apply(pokemon));
 				}

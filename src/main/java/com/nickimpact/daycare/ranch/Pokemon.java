@@ -3,15 +3,12 @@ package com.nickimpact.daycare.ranch;
 import com.nickimpact.daycare.DaycarePlugin;
 import com.nickimpact.daycare.configuration.ConfigKeys;
 import com.nickimpact.daycare.utils.GsonUtils;
+import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.pokemon.PokemonSpec;
-import com.pixelmonmod.pixelmon.config.PixelmonEntityList;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
-import org.spongepowered.api.Sponge;
 
 import java.time.Instant;
 import java.util.Date;
@@ -23,7 +20,7 @@ import java.util.Date;
  */
 public class Pokemon {
 
-	private transient EntityPixelmon pokemon;
+	private transient com.pixelmonmod.pixelmon.api.pokemon.Pokemon pokemon;
 	private transient NBTTagCompound nbt;
 	private String json;
 
@@ -43,9 +40,9 @@ public class Pokemon {
 
 	public static final long waitTime = DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LVL_WAIT_TIME);
 
-	public Pokemon(EntityPixelmon pokemon) {
+	public Pokemon(com.pixelmonmod.pixelmon.api.pokemon.Pokemon pokemon) {
 		this.pokemon = pokemon;
-		this.startLvl = pokemon.getLvl().getLevel();
+		this.startLvl = pokemon.getLevel();
 		this.gender = pokemon.getGender();
 		NBTTagCompound nbt = new NBTTagCompound();
 		this.nbt = pokemon.writeToNBT(nbt);
@@ -53,11 +50,9 @@ public class Pokemon {
 		this.lastLvl = Date.from(Instant.now());
 	}
 
-	public EntityPixelmon getPokemon() {
+	public com.pixelmonmod.pixelmon.api.pokemon.Pokemon getPokemon() {
 		if(this.pokemon == null) {
-			this.pokemon = (EntityPixelmon) PixelmonEntityList.createEntityFromNBT(
-					decode(), (World) Sponge.getServer().getWorld(Sponge.getServer().getDefaultWorldName()).orElse(Sponge.getServer().getOnlinePlayers().iterator().next().getWorld())
-			);
+			this.pokemon = Pixelmon.pokemonFactory.create(this.decode());
 		}
 
 		return this.pokemon;

@@ -12,11 +12,9 @@ import com.nickimpact.impactor.gui.v2.Displayable;
 import com.nickimpact.impactor.gui.v2.Icon;
 import com.nickimpact.impactor.gui.v2.Layout;
 import com.nickimpact.impactor.gui.v2.UI;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import com.pixelmonmod.pixelmon.enums.EnumPokemon;
-import com.pixelmonmod.pixelmon.storage.PixelmonStorage;
-import com.pixelmonmod.pixelmon.storage.PlayerStorage;
-import net.minecraft.entity.player.EntityPlayerMP;
+import com.pixelmonmod.pixelmon.Pixelmon;
+import com.pixelmonmod.pixelmon.enums.EnumSpecies;
+import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.data.key.Keys;
@@ -88,7 +86,7 @@ public class SelectionUI implements Displayable {
 		lb.slot(back, 13);
 
 		// Store pokemon name in the case of an evolution when trying to retrieve
-		final EnumPokemon species = pokemon.getPokemon().getSpecies();
+		final EnumSpecies species = pokemon.getPokemon().getSpecies();
 
 		Map<String, Object> variables = Maps.newHashMap();
 		variables.put("dummy", pokemon.getPokemon());
@@ -106,7 +104,7 @@ public class SelectionUI implements Displayable {
 				.build()
 		);
 		retrieve.addListener(clickable -> {
-			final EntityPixelmon poke = this.pokemon.getPokemon();
+			final com.pixelmonmod.pixelmon.api.pokemon.Pokemon poke = this.pokemon.getPokemon();
 			final BigDecimal confirmPrice = calcPrice();
 			if(confirmPrice.compareTo(price) > 0) {
 				tokens.put("price", src -> Optional.of(DaycarePlugin.getInstance().getEconomy().getDefaultCurrency().format(price)));
@@ -126,11 +124,9 @@ public class SelectionUI implements Displayable {
 						confirmPrice,
 						Sponge.getCauseStackManager().getCurrentCause()
 				);
-				Optional<PlayerStorage> optStor = PixelmonStorage.pokeBallManager.getPlayerStorage((EntityPlayerMP) clickable.getPlayer());
-				optStor.ifPresent(stor -> {
-					poke.getLvl().setLevel(Math.min(100, poke.getLvl().getLevel() + pokemon.getGainedLvls()));
-					stor.addToParty(poke);
-				});
+				PlayerPartyStorage storage = Pixelmon.storageManager.getParty(clickable.getPlayer().getUniqueId());
+				poke.setLevel(Math.min(100, poke.getLevel() + pokemon.getGainedLvls()));
+				storage.add(poke);
 
 				if(species != poke.getSpecies()) {
 					variables.put("dummy", pokemon.getPokemon());

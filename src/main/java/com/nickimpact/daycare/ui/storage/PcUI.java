@@ -10,17 +10,12 @@ import com.nickimpact.daycare.ui.PenUI;
 import com.nickimpact.daycare.ui.StandardIcons;
 import com.nickimpact.daycare.utils.MessageUtils;
 import com.nickimpact.impactor.gui.v2.*;
+import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.pokemon.PokemonSpec;
-import com.pixelmonmod.pixelmon.config.PixelmonEntityList;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import com.pixelmonmod.pixelmon.storage.ComputerBox;
-import com.pixelmonmod.pixelmon.storage.PixelmonStorage;
-import com.pixelmonmod.pixelmon.storage.PlayerComputerStorage;
+import com.pixelmonmod.pixelmon.api.storage.PCBox;
+import com.pixelmonmod.pixelmon.api.storage.PCStorage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
@@ -107,12 +102,11 @@ public class PcUI implements PageDisplayable {
 		List<Icon> icons = Lists.newArrayList();
 		int index = 0;
 		for(PCRepresentable pcr : this.getBoxContents(player)) {
-			Optional<EntityPixelmon> optPoke = pcr.get().map(nbt -> (EntityPixelmon) PixelmonEntityList.createEntityFromNBT(nbt, (World)player.getWorld()));
-			if(optPoke.isPresent()) {
-				EntityPixelmon pokemon = optPoke.get();
+			if(pcr.get().isPresent()) {
+				com.pixelmonmod.pixelmon.api.pokemon.Pokemon pokemon = pcr.get().get();
 				Icon icon = StandardIcons.getPicture(player, new Pokemon(pokemon), DaycarePlugin.getInstance().getMsgConfig().get(MsgConfigKeys.POKEMON_LORE_SELECT));
 
-				if(!pokemon.isEgg) {
+				if(!pokemon.isEgg()) {
 					final int i = index;
 					icon.addListener(clickable -> {
 						if(this.UNBREEDABLE.matches(pokemon)) {
@@ -120,7 +114,7 @@ public class PcUI implements PageDisplayable {
 							return;
 						}
 
-						PlayerComputerStorage stor = PixelmonStorage.computerManager.getPlayerStorage((EntityPlayerMP) player);
+						PCStorage stor = Pixelmon.storageManager.getPCForPlayer(player.getUniqueId());
 						this.selection = new Selection(pokemon, pcr.pos);
 
 						Icon confirm = Icon.from(
@@ -131,7 +125,7 @@ public class PcUI implements PageDisplayable {
 										.build()
 						);
 						confirm.addListener(clickable1 -> {
-							stor.getBox(i / 30).changePokemon(pcr.pos, null);
+							stor.getBox(i / 30).set(pcr.pos, null);
 							Pokemon rep = new Pokemon(this.selection.getPokemon());
 							if (this.slot == 1) {
 								this.pen.setSlot1(rep);
@@ -160,25 +154,21 @@ public class PcUI implements PageDisplayable {
 
 	private List<PCRepresentable> getBoxContents(Player player) {
 		List<PCRepresentable> contents = Lists.newArrayList();
-		PlayerComputerStorage storage = PixelmonStorage.computerManager.getPlayerStorage((EntityPlayerMP) player);
-		for(ComputerBox box : storage.getBoxList()) {
+		PCStorage storage = Pixelmon.storageManager.getPCForPlayer(player.getUniqueId());
+		for(PCBox box : storage.getBoxes()) {
 			contents.addAll(getPokemonInBox(box));
 		}
 
 		return contents;
 	}
 
-	private List<PCRepresentable> getPokemonInBox(ComputerBox box){
+	private List<PCRepresentable> getPokemonInBox(PCBox box){
 		List<PCRepresentable> pcContents = new ArrayList<>();
 		for(int i = 0; i < 30; i++){
-			pcContents.add(new PCRepresentable(box.getNBTByPosition(i), i));
+			pcContents.add(new PCRepresentable(box.get(i), i));
 		}
 
 		return pcContents;
-	}
-
-	private Optional<EntityPixelmon> get(Player player, int box, int pos){
-		return pc.get(30 * (box - 1) + pos).get().map(nbt -> (EntityPixelmon) PixelmonEntityList.createEntityFromNBT(nbt, (World)player.getWorld()));
 	}
 
 	@Override
@@ -189,13 +179,13 @@ public class PcUI implements PageDisplayable {
 	@RequiredArgsConstructor
 	private class PCRepresentable {
 
-		private final NBTTagCompound nbt;
+		private final com.pixelmonmod.pixelmon.api.pokemon.Pokemon pokemon;
 
 		/** Represents the actual slot position of the pokemon in the box currently being viewed */
 		@Getter private final int pos;
 
-		public Optional<NBTTagCompound> get() {
-			return Optional.ofNullable(nbt);
+		public Optional<com.pixelmonmod.pixelmon.api.pokemon.Pokemon> get() {
+			return Optional.ofNullable(pokemon);
 		}
 	}
 }

@@ -11,6 +11,7 @@ import com.nickimpact.daycare.commands.DaycareCmd;
 import com.nickimpact.daycare.configuration.ConfigKeys;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.impl.DaycareServiceImpl;
+import com.nickimpact.daycare.impl.EconomicPenModule;
 import com.nickimpact.daycare.internal.TextParsingUtils;
 import com.nickimpact.daycare.listeners.ConnectionListener;
 import com.nickimpact.daycare.listeners.NPCListener;
@@ -184,6 +185,8 @@ public class DaycarePlugin extends SpongePlugin {
 				new BreedStylePixelmonNative(),
 				new BreedStyleTimed()
 		));
+
+		this.service.registerUnlocker("economic", new EconomicPenModule());
 		try {
 			this.service.getBreedStyleRegistry().getInstanceRegistry().register(BreedStylePixelmonNative.BSPNInstance.class);
 			this.service.getBreedStyleRegistry().getInstanceRegistry().register(BreedStyleTimed.BSTInstance.class);
@@ -226,6 +229,7 @@ public class DaycarePlugin extends SpongePlugin {
 			}
 
 			this.breedStyle = this.service.getBreedStyleRegistry().getFromName(this.config.get(ConfigKeys.BREED_STYLE)).orElse(this.service.getBreedStyleRegistry().getFirst());
+			Ranch.registerUnlocker();
 
 			this.logger.info(MessageUtils.fetchMsg(MsgConfigKeys.STARTUP_INIT_COMPLETE));
 		} catch (Exception exc) {
@@ -266,15 +270,19 @@ public class DaycarePlugin extends SpongePlugin {
 
 	@Override
 	public void onDisconnect() {
-		this.getStorage().updateAll(this.getRanches()).thenAccept(after -> {
-			try {
-				this.getRanches().forEach(Ranch::shutdown);
-				this.storage.shutdown();
-			} catch (Exception e1) {
-				this.getLogger().error("Unable to shutdown database properly...");
-				e1.printStackTrace();
-			}
-		});
+		try {
+			this.getStorage().updateAll(this.getRanches()).thenAccept(after -> {
+				try {
+					this.getRanches().forEach(Ranch::shutdown);
+					this.storage.shutdown();
+				} catch (Exception e1) {
+					this.getLogger().error("Unable to shutdown database properly...");
+					e1.printStackTrace();
+				}
+			}).get();
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override

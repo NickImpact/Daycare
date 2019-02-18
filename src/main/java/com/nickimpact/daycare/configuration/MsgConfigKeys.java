@@ -160,8 +160,7 @@ public class MsgConfigKeys implements IConfigKeys {
 	public static final ConfigKey<String> RANCH_UI_PEN_EMPTY = StringKey.of("ui.main-menu.pen.slot-empty", "&7Slot {{slot_id}}&7: &cEmpty...");
 	public static final ConfigKey<List<String>> RANCH_UI_PEN_LOCKED = ListKey.of("ui.main-menu.pen.locked", Lists.newArrayList(
 			"&cCurrently locked...",
-			"",
-			"&cUnlock Price: &a{{price}}"
+			""
 	));
 	public static final ConfigKey<String> RANCH_UI_PEN_INSUFFICIENT_FUNDS = StringKey.of("ui.main-menu.pen.insufficient-funds", "{{daycare_error}} &cInsufficient funds...");
 
@@ -184,7 +183,6 @@ public class MsgConfigKeys implements IConfigKeys {
 	public static final ConfigKey<String> PEN_HISTORY = StringKey.of("ui.pen.pen-info.title", "&ePen Info");
 	public static final ConfigKey<List<String>> PEN_HISTORY_LORE = ListKey.of("ui.pen.pen-info.lore", Lists.newArrayList(
 			"&7Date Unlocked: &e{{date_unlocked}}",
-			"&7Price: &a{{price}}",
 			"&7Eggs Forged: &e{{total_eggs_produced}}"
 	));
 

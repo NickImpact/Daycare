@@ -39,6 +39,7 @@ public class AdminBaseCmd extends SpongeSubCommand {
 	public SpongeCommand[] getSubCommands() {
 		return new SpongeCommand[]{
 				new AddNPCCmd(this.plugin),
+				new RemoveNPCCmd(this.plugin),
 				new PricesCmd(this.plugin)
 		};
 	}

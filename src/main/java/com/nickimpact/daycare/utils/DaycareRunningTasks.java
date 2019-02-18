@@ -98,11 +98,13 @@ public class DaycareRunningTasks {
 		for(LevelingEvolution evolution : evolutions) {
 			if(evolution.to == null || evolution.to.name == null) continue; // Ignore broken evolutions
 
-			if(evolution.getLevel() <= pokemon.getStartLvl() + pokemon.getGainedLvls() && evolution.conditions.stream().allMatch(condition -> condition.passes(pokemon.getPokemon()))) {
+			EntityPixelmon temp = pokemon.getPokemon().getOrSpawnPixelmon(null, 0, 0, 0);
+			if(evolution.getLevel() <= pokemon.getStartLvl() + pokemon.getGainedLvls() && evolution.conditions.stream().allMatch(condition -> condition.passes(temp))) {
+				temp.isDead = true;
 				Optional<Player> optPl = Sponge.getServer().getPlayer(ranch.getOwnerUUID());
 				if (optPl.isPresent()) {
 					Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-					tokens.put("pokemon_before_evo", src -> Optional.of(Text.of(pokemon.getPokemon().getName())));
+					tokens.put("pokemon_before_evo", src -> Optional.of(Text.of(pokemon.getPokemon().getSpecies().getPokemonName())));
 					tokens.put("pokemon_after_evo", src -> Optional.of(Text.of(evolution.to.name)));
 					optPl.get().sendMessages(MessageUtils.fetchAndParseMsgs(optPl.get(), MsgConfigKeys.EVOLVE, tokens, null));
 				}
@@ -117,7 +119,7 @@ public class DaycareRunningTasks {
 
 	private static void attemptMoveLearn(Ranch ranch, Pokemon pokemon) {
 		Moveset moveset = pokemon.getPokemon().getMoveset();
-		LinkedHashMap<Integer, ArrayList<Attack>> levelupMoves = pokemon.getPokemon().baseStats.levelUpMoves;
+		LinkedHashMap<Integer, ArrayList<Attack>> levelupMoves = pokemon.getPokemon().getBaseStats().levelUpMoves;
         int currLevel = pokemon.getCurrentLvl();
 
 		ArrayList<Attack> attacks = levelupMoves.get(currLevel);

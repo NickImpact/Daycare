@@ -12,12 +12,9 @@ import com.nickimpact.impactor.api.commands.annotations.Aliases;
 import com.nickimpact.impactor.api.commands.annotations.Permission;
 import com.nickimpact.impactor.api.commands.elements.PositiveIntegerElement;
 import com.nickimpact.impactor.api.plugins.SpongePlugin;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import com.pixelmonmod.pixelmon.storage.PixelmonStorage;
-import com.pixelmonmod.pixelmon.storage.PlayerStorage;
+import com.pixelmonmod.pixelmon.Pixelmon;
+import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
 import io.github.nucleuspowered.nucleus.api.exceptions.NucleusException;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.world.World;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -77,41 +74,43 @@ public class AddCmd extends SpongeSubCommand {
 			if(ranch.isPresent()) {
 				Ranch r = ranch.get();
 
-				Optional<PlayerStorage> party = PixelmonStorage.pokeBallManager.getPlayerStorage((EntityPlayerMP)player);
-				if(party.isPresent()) {
-					final int slot = args.<Integer>getOne(partySlot).get();
-					final int pen = args.<Integer>getOne(Text.of("pen")).get() - 1;
-					if(r.getPen(pen).isFull()) {
-						throw new CommandException(Text.of("That pen is full..."));
-					}
-					EntityPixelmon pokemon = party.get().getPokemon(party.get().getIDFromPosition(slot), (World)player.getWorld());
-					party.get().removeFromPartyPlayer(slot);
-					Pokemon holder = new Pokemon(pokemon);
-					r.addToPen(holder, pen);
-
-					Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-					tokens.put("pen", cs -> Optional.of(Text.of(pen)));
-
-					Map<String, Object> variables = Maps.newHashMap();
-					variables.put("dummy", pokemon);
-					variables.put("dummy2", holder);
-					try {
-						player.sendMessage(DaycarePlugin.getInstance().getTextParsingUtils().parse(
-							"{{daycare_prefix}} &7Successfully deposited your {{pokemon}} into pen {{pen}}",
-								player,
-								tokens,
-								variables
-						));
-					} catch (NucleusException e) {
-						player.sendMessage(Text.of(
-								DaycareInfo.PREFIX, TextColors.GRAY, "Sucessfully deposited your ", TextColors.GREEN,
-								pokemon.getName(), TextColors.GRAY, " into pen ", TextColors.YELLOW, pen
-						));
-					}
-
-					return CommandResult.success();
+				PlayerPartyStorage party = Pixelmon.storageManager.getParty(player.getUniqueId());
+				final int slot = args.<Integer>getOne(partySlot).get();
+				final int pen = args.<Integer>getOne(Text.of("pen")).get() - 1;
+				if(r.getPen(pen).isFull()) {
+					throw new CommandException(Text.of("That pen is full..."));
 				}
-				throw new CommandException(Text.of("Failed to load party data..."));
+				com.pixelmonmod.pixelmon.api.pokemon.Pokemon pokemon = party.get(slot);
+				if(pokemon == null) {
+					throw new CommandException(Text.of("That slot is empty..."));
+				}
+
+				party.set(slot, null);
+				Pokemon holder = new Pokemon(pokemon);
+				r.addToPen(holder, pen);
+
+				Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
+				tokens.put("pen", cs -> Optional.of(Text.of(pen)));
+
+				Map<String, Object> variables = Maps.newHashMap();
+				variables.put("dummy", pokemon);
+				variables.put("dummy2", holder);
+				try {
+					player.sendMessage(DaycarePlugin.getInstance().getTextParsingUtils().parse(
+						"{{daycare_prefix}} &7Successfully deposited your {{pokemon}} into pen {{pen}}",
+							player,
+							tokens,
+							variables
+					));
+				} catch (NucleusException e) {
+					player.sendMessage(Text.of(
+							DaycareInfo.PREFIX, TextColors.GRAY, "Sucessfully deposited your ", TextColors.GREEN,
+							pokemon.getDisplayName(), TextColors.GRAY, " into pen ", TextColors.YELLOW, pen
+					));
+				}
+
+				return CommandResult.success();
+
 			}
 
 			throw new CommandException(Text.of("Couldn't locate a ranch for you..."));

@@ -115,33 +115,14 @@ public class RanchUI implements Displayable {
 				}).delayTicks(1).submit(DaycarePlugin.getInstance());
 			});
 		} else {
-			org.mariuszgromada.math.mxparser.Function function = new org.mariuszgromada.math.mxparser.Function("P(b, i, p) = " + DaycarePlugin.getInstance().getConfig().get(ConfigKeys.PEN_PRICE_EQUATION));
-			Expression expression = new Expression(String.format(
-					"P(%.2f, %.2f, %d)",
-					DaycarePlugin.getInstance().getConfig().get(ConfigKeys.BASE_PEN_PRICE),
-					DaycarePlugin.getInstance().getConfig().get(ConfigKeys.INCREMENT_PEN_PRICE),
-					id - 1
-			), function);
-
-			BigDecimal price = new BigDecimal(expression.calculate());
-			tokens.put("price", src -> Optional.of(DaycarePlugin.getInstance().getEconomy().getDefaultCurrency().format(price)));
-			icon.getDisplay().offer(Keys.ITEM_LORE, MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.RANCH_UI_PEN_LOCKED, tokens, null));
+			Text requirement = Ranch.getUnlocker().getTranslatedRequirement(id);
+			List<Text> lore = MessageUtils.fetchAndParseMsgs(player, MsgConfigKeys.RANCH_UI_PEN_LOCKED, tokens, null);
+			lore.add(requirement);
+			icon.getDisplay().offer(Keys.ITEM_LORE, lore);
 			icon.addListener(clickable -> {
 				try {
 					if (!ranch.unlock(id - 1)) {
 						clickable.getPlayer().sendMessage(MessageUtils.fetchAndParseMsg(clickable.getPlayer(), MsgConfigKeys.RANCH_UI_PEN_INSUFFICIENT_FUNDS, null, null));
-					} else {
-						this.display.setSlot(index, this.drawPen(player, id, index));
-						tokens.put("pen", src -> Optional.of(Text.of(id)));
-						tokens.put("price", src -> Optional.of(DaycarePlugin.getInstance().getEconomy().getDefaultCurrency().format(price)));
-						clickable.getPlayer().sendMessages(
-								MessageUtils.fetchAndParseMsg(
-										clickable.getPlayer(),
-										MsgConfigKeys.UNLOCK_PEN,
-										tokens,
-										null
-								)
-						);
 					}
 				} catch (AlreadyUnlockedException e) {
 					clickable.getPlayer().sendMessages(Text.of("Unable to open pen due to an error..."));
