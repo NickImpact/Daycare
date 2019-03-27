@@ -3,32 +3,26 @@ package com.nickimpact.daycare.utils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.nickimpact.daycare.DaycarePlugin;
-import com.nickimpact.daycare.DaycareInfo;
 import com.nickimpact.daycare.configuration.ConfigKeys;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.ranch.Pokemon;
 import com.nickimpact.daycare.ranch.Ranch;
 import com.nickimpact.daycare.stats.Statistics;
 import com.pixelmonmod.pixelmon.battles.attacks.Attack;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Moveset;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.evolution.Evolution;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.evolution.types.LevelingEvolution;
+import gg.psyduck.pmixins.api.EvolutionPatch;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.nickimpact.daycare.DaycarePlugin.validVersion;
 
 /**
  * (Some note will appear here)
@@ -38,7 +32,7 @@ import static com.nickimpact.daycare.DaycarePlugin.validVersion;
 public class DaycareRunningTasks {
 
 	public static void runLvlTask() {
-		if(DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LEVELING_ENABLED)) {
+		if (DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LEVELING_ENABLED)) {
 			Sponge.getScheduler().createTaskBuilder().execute(() -> {
 				final List<Ranch> ranches = ImmutableList.copyOf(DaycarePlugin.getInstance().getRanches().stream().filter(ranch -> ranch.getSettings().canLevel()).collect(Collectors.toList()));
 				for (Ranch ranch : ranches) {
@@ -50,36 +44,39 @@ public class DaycareRunningTasks {
 					});
 				}
 			})
-			.interval(DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LVL_TASK_TIME), TimeUnit.SECONDS)
-			.async()
-			.submit(DaycarePlugin.getInstance());
+					.interval(DaycarePlugin.getInstance().getConfig().get(ConfigKeys.LVL_TASK_TIME), TimeUnit.SECONDS)
+					.async()
+					.submit(DaycarePlugin.getInstance());
 		}
 	}
 
 	private static void levelTask(Ranch ranch, Pokemon pokemon) {
-		if(pokemon.getStartLvl() + pokemon.getGainedLvls() >= 100) {
-			if(pokemon.getStartLvl() + pokemon.getGainedLvls() > 100) {
+		if (pokemon.getStartLvl() + pokemon.getGainedLvls() >= 100) {
+			if (pokemon.getStartLvl() + pokemon.getGainedLvls() > 100) {
 				pokemon.setGainedLvls(100 - pokemon.getStartLvl());
 			}
 			return;
 		}
 
 		Date lastLvl = pokemon.getLastLvl();
-		if(lastLvl == null) {
+		if (lastLvl == null) {
 			lastLvl = Date.from(Instant.now());
 		}
-		if(Date.from(Instant.now()).after(Date.from(lastLvl.toInstant().plusSeconds(Pokemon.waitTime)))) {
+		if (Date.from(Instant.now()).after(Date.from(lastLvl.toInstant().plusSeconds(Pokemon.waitTime)))) {
 			pokemon.setLastLvl(Date.from(Instant.now()));
 			pokemon.incrementGainedLvls();
 			ranch.getStats().incrementStat(Statistics.Stats.NUM_GAINED_LVLS);
 
-			if(ranch.getSettings().canLearnMoves()) {
+			if (ranch.getSettings().canLearnMoves()) {
 				attemptMoveLearn(ranch, pokemon);
 			}
-			if(ranch.getSettings().canEvolve()) {
-				if(attemptEvolution(ranch, pokemon)) {
-					if(ranch.getSettings().canLearnMoves()) {
-						attemptMoveLearn(ranch, pokemon);
+
+			if (Sponge.getPluginManager().isLoaded("pmixins")) {
+				if (ranch.getSettings().canEvolve()) {
+					if (attemptEvolution(ranch, pokemon)) {
+						if (ranch.getSettings().canLearnMoves()) {
+							attemptMoveLearn(ranch, pokemon);
+						}
 					}
 				}
 			}
@@ -91,16 +88,20 @@ public class DaycareRunningTasks {
 
 	private static boolean attemptEvolution(Ranch ranch, Pokemon pokemon) {
 		ArrayList<LevelingEvolution> evolutions = pokemon.getPokemon().getEvolutions(LevelingEvolution.class);
-		if(evolutions.size() == 0) {
+		if (evolutions.size() == 0) {
 			return false;
 		}
 
-		for(LevelingEvolution evolution : evolutions) {
-			if(evolution.to == null || evolution.to.name == null) continue; // Ignore broken evolutions
+		for (LevelingEvolution evolution : evolutions) {
+			if (evolution.to == null || evolution.to.name == null) continue; // Ignore broken evolutions
 
-			EntityPixelmon temp = pokemon.getPokemon().getOrSpawnPixelmon(null, 0, 0, 0);
-			if(evolution.getLevel() <= pokemon.getStartLvl() + pokemon.getGainedLvls() && evolution.conditions.stream().allMatch(condition -> condition.passes(temp))) {
-				temp.isDead = true;
+			if (evolution.getLevel() <= pokemon.getStartLvl() + pokemon.getGainedLvls() && evolution.conditions.stream().allMatch(condition -> {
+				if (condition instanceof EvolutionPatch) {
+					return ((EvolutionPatch) condition).passes(pokemon.getPokemon());
+				}
+
+				return false;
+			})) {
 				Optional<Player> optPl = Sponge.getServer().getPlayer(ranch.getOwnerUUID());
 				if (optPl.isPresent()) {
 					Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
@@ -120,14 +121,14 @@ public class DaycareRunningTasks {
 	private static void attemptMoveLearn(Ranch ranch, Pokemon pokemon) {
 		Moveset moveset = pokemon.getPokemon().getMoveset();
 		LinkedHashMap<Integer, ArrayList<Attack>> levelupMoves = pokemon.getPokemon().getBaseStats().levelUpMoves;
-        int currLevel = pokemon.getCurrentLvl();
+		int currLevel = pokemon.getCurrentLvl();
 
 		ArrayList<Attack> attacks = levelupMoves.get(currLevel);
-		if(attacks != null) {
-			for(Attack attack : attacks) {
+		if (attacks != null) {
+			for (Attack attack : attacks) {
 				Optional<Player> optPl = Sponge.getServer().getPlayer(ranch.getOwnerUUID());
 				optPl.ifPresent(player -> {
-					if(moveset.size() < 4) {
+					if (moveset.size() < 4) {
 						moveset.add(attack);
 
 						Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();

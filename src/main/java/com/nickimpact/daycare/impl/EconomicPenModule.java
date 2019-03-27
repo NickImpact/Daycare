@@ -18,7 +18,7 @@ import java.util.UUID;
 public class EconomicPenModule implements PenUnlockModule {
 
 	@Override
-	public Text getRequirement(int id) {
+	public Text getTranslatedRequirement(int id) {
 		return Text.of(TextColors.RED, "Unlock Price: ", TextColors.GREEN, DaycarePlugin.getInstance().getEconomy().getDefaultCurrency().format(this.calcPrice(id)));
 	}
 
