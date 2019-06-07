@@ -205,7 +205,7 @@ public class SqlImplementation implements StorageImplementation {
 				PreparedStatement egg = connection.prepareStatement(processor.apply(UPDATE_PEN_EGG));
 				if(pen.getEgg().isPresent()) {
 					Clob e = connection.createClob();
-					e.setString(1, DaycarePlugin.getInstance().getGson().toJson(pen.getEgg().get()));
+					e.setString(1, plugin.getGson().toJson(pen.getEgg().get()));
 					egg.setClob(1, e);
 				} else {
 					egg.setNull(1, Types.CLOB);
@@ -216,7 +216,7 @@ public class SqlImplementation implements StorageImplementation {
 				if(pen.getSettings().isDirty()) {
 					PreparedStatement settings = connection.prepareStatement(processor.apply(UPDATE_PEN_SETTINGS));
 					Clob s = connection.createClob();
-					s.setString(1, DaycarePlugin.getInstance().getGson().toJson(pen.getSettings()));
+					s.setString(1, plugin.getGson().toJson(pen.getSettings()));
 					settings.setClob(1, s);
 					settings.setString(2, pen.getIdentifier().toString());
 					settings.executeUpdate();
@@ -239,7 +239,7 @@ public class SqlImplementation implements StorageImplementation {
 			ps.setNull(1, Types.CLOB);
 		} else {
 			Clob pokemon = connection.createClob();
-			pokemon.setString(1, DaycarePlugin.getInstance().getGson().toJson(wrapper));
+			pokemon.setString(1, plugin.getGson().toJson(wrapper));
 			ps.setClob(1, pokemon);
 		}
 		ps.setString(2, pen.toString());

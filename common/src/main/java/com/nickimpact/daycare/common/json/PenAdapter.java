@@ -21,7 +21,7 @@ public class PenAdapter extends Adapter<Pen> {
 	}
 
 	@Override
-	protected Registry<Pen> getRegistry() {
+	public Registry<Pen> getRegistry() {
 		return this.registry;
 	}
 }

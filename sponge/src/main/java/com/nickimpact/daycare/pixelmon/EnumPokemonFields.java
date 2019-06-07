@@ -126,7 +126,7 @@ public enum EnumPokemonFields {
 
 		String texture = nbt.getString(NbtKeys.CUSTOM_TEXTURE);
 		if(!texture.isEmpty()) {
-			Config config = SpongeDaycarePlugin.getInstance().getConfig();
+			Config config = SpongeDaycarePlugin.getSpongeInstance().getConfig();
 			if(config.get(ConfigKeys.TEXTUREFLAG_CAPITALIZE)) {
 				StringBuilder sb = new StringBuilder();
 				String[] split = texture.split("\\s+");

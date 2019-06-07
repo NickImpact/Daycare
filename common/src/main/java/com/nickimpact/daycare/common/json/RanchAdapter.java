@@ -21,7 +21,7 @@ public class RanchAdapter extends Adapter<Ranch> {
 	}
 
 	@Override
-	protected Registry<Ranch> getRegistry() {
+	public Registry<Ranch> getRegistry() {
 		return this.registry;
 	}
 

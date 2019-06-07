@@ -21,7 +21,7 @@ public class PokemonWrapperAdapter extends Adapter<DaycarePokemonWrapper> {
 	}
 
 	@Override
-	protected Registry<DaycarePokemonWrapper> getRegistry() {
+	public Registry<DaycarePokemonWrapper> getRegistry() {
 		return this.registry;
 	}
 }
