@@ -4,10 +4,7 @@ import com.nickimpact.daycare.api.pens.DaycareNPC;
 import com.nickimpact.daycare.api.pens.Ranch;
 import com.nickimpact.impactor.api.plugin.ImpactorPlugin;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public interface StorageImplementation {
 
@@ -29,7 +26,7 @@ public interface StorageImplementation {
 
 	boolean deleteRanch(Ranch ranch) throws Exception;
 
-	Ranch getRanch(UUID player) throws Exception;
+	Optional<Ranch> getRanch(UUID player) throws Exception;
 
 	boolean addNPC(DaycareNPC npc) throws Exception;
 

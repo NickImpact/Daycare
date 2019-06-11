@@ -229,6 +229,7 @@ public class SqlImplementation implements StorageImplementation {
 				PreparedStatement unlocked = connection.prepareStatement(processor.apply(UPDATE_PEN_UNLOCK_STATUS));
 				unlocked.setBoolean(1, pen.isUnlocked());
 				unlocked.setTimestamp(2, Timestamp.valueOf(pen.getDateUnlocked()));
+				unlocked.setString(3, pen.getIdentifier().toString());
 				unlocked.executeUpdate();
 			}
 		}
@@ -271,7 +272,7 @@ public class SqlImplementation implements StorageImplementation {
 	}
 
 	@Override
-	public Ranch getRanch(UUID player) throws Exception {
+	public Optional<Ranch> getRanch(UUID player) throws Exception {
 		Ranch ranch = null;
 		Connection connection = connectionFactory.getConnection();
 		PreparedStatement ps = connection.prepareStatement(processor.apply(GET_RANCH));
@@ -309,7 +310,7 @@ public class SqlImplementation implements StorageImplementation {
 			ranch = builder.pens(pens).build();
 		}
 
-		return ranch;
+		return Optional.ofNullable(ranch);
 	}
 
 	@Override

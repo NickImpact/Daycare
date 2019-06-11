@@ -5,6 +5,7 @@ import com.nickimpact.daycare.api.pens.Ranch;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,7 +23,7 @@ public interface IDaycareStorage {
 
 	CompletableFuture<Boolean> deleteRanch(Ranch ranch);
 
-	CompletableFuture<Ranch> getRanch(UUID player);
+	CompletableFuture<Optional<Ranch>> getRanch(UUID player);
 
 	CompletableFuture<Boolean> addNPC(DaycareNPC npc);
 
