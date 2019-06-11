@@ -8,6 +8,7 @@ CREATE TABLE `{prefix}ranch` (
 CREATE TABLE `{prefix}pens` (
   `ranch`   VARCHAR(36) NOT NULL,
   `pen`     VARCHAR(36) NOT NULL,
+  `id`      INTEGER     NOT NULL,
   PRIMARY KEY (`ranch`),
   FOREIGN KEY (`ranch`) REFERENCES `{prefix}ranch`(`ranch`)
 );

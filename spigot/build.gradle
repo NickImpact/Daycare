@@ -9,9 +9,12 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven { url = "https://repo.aikar.co/content/groups/aikar/" }
+    maven { url = "https://hub.spigotmc.org/nexus/content/groups/public/" }
 }
 
 dependencies {
     shadow 'reforged:server:7.0.6@Pixelmon-1.12.2-7.0.6-server.jar'
+    compile "co.aikar:acf-paper:0.5.0-SNAPSHOT"
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

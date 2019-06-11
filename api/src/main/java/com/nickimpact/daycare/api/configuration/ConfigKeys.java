@@ -42,7 +42,7 @@ public class ConfigKeys implements ConfigKeyHolder {
 
 	public static final ConfigKey<String> LANG = stringKey("plugin-language", "en_US");
 
-	public static final ConfigKey<Integer> NUM_PENS = intKey("pens.base-num-pens", 14);
+	public static final ConfigKey<Integer> NUM_PENS = intKey("pens.base-num-pens", 21);
 	public static final ConfigKey<Boolean> FIRST_PEN_UNLOCKED = booleanKey("pens.first-pen-unlocked", true);
 	public static final ConfigKey<Double> BASE_PEN_PRICE = doubleKey("pens.pricing.base-price", 5000.0);
 	public static final ConfigKey<Double> INCREMENT_PEN_PRICE = doubleKey("pens.pricing.increment", 500.0);

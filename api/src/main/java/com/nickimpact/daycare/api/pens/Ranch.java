@@ -3,11 +3,12 @@ package com.nickimpact.daycare.api.pens;
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.api.util.PluginInstance;
+import com.nickimpact.impactor.api.building.Builder;
 
 import java.util.List;
 import java.util.UUID;
 
-public abstract class Ranch<T extends Pen<?, ?>> {
+public abstract class Ranch<T extends Pen> {
 
 	private UUID identifier;
 
@@ -23,11 +24,18 @@ public abstract class Ranch<T extends Pen<?, ?>> {
 		this.stats = new Statistics();
 
 		for(int i = 0; i < PluginInstance.getPlugin().getConfiguration().get(ConfigKeys.NUM_PENS); i++) {
-			this.pens.add(this.newPen());
+			this.pens.add(this.newPen(i + 1));
 		}
 	}
 
-	public abstract T newPen();
+	protected Ranch(UUID identifier, UUID owner, List<T> pens, Statistics stats) {
+		this.identifier = identifier;
+		this.owner = owner;
+		this.pens = pens;
+		this.stats = stats;
+	}
+
+	public abstract T newPen(int id);
 
 	public UUID getIdentifier() {
 		return this.identifier;
@@ -56,8 +64,8 @@ public abstract class Ranch<T extends Pen<?, ?>> {
 		}
 
 		PenUnlockModule module = PluginInstance.getPlugin().getService().getActiveModule();
-		if(module.canUnlock(this.owner, index)) {
-			if(module.process(this.owner, index)) {
+		if(module.canPay(this.owner, index)) {
+			if(module.pay(this.owner, index)) {
 				pen.unlock();
 				return true;
 			}
@@ -71,10 +79,18 @@ public abstract class Ranch<T extends Pen<?, ?>> {
 	}
 
 	public static RanchBuilder builder() {
-		return new RanchBuilder();
+		return PluginInstance.getPlugin().getService().getBuilderRegistry().createFor(RanchBuilder.class);
 	}
 
-	public static class RanchBuilder {
+	public interface RanchBuilder extends Builder<Ranch> {
+
+		RanchBuilder identifier(UUID identifier);
+
+		RanchBuilder owner(UUID owner);
+
+		RanchBuilder pens(List<Pen> pens);
+
+		RanchBuilder stats(Statistics stats);
 
 	}
 

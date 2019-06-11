@@ -25,9 +25,9 @@
 
 package com.nickimpact.daycare.common.storage.implementation.sql;
 
+import com.google.common.collect.Lists;
 import com.nickimpact.daycare.api.IDaycarePlugin;
 import com.nickimpact.daycare.api.pens.*;
-import com.nickimpact.daycare.common.plugin.DaycarePlugin;
 import com.nickimpact.daycare.common.storage.implementation.StorageImplementation;
 import com.nickimpact.daycare.common.storage.implementation.sql.connection.ConnectionFactory;
 
@@ -49,21 +49,25 @@ public class SqlImplementation implements StorageImplementation {
 	private static final String ADD_PEN = "INSERT INTO `{prefix}pens` VALUES(?, ?)";
 	private static final String ADD_PEN_DATA = "INSERT INTO `{prefix}pen` (pen, unlocked, settings) VALUES(?, ?, ?)";
 
-	private static final String UPDATE_RANCH_STATISTICS = "UPDATE TABLE `{prefix}ranch` SET stats = ? WHERE owner = ? AND ranch = ?";
-	private static final String UPDATE_PEN_SLOT = "UPDATE TABLE `{prefix}pen` SET {{pen_slot}} = ? WHERE pen = ?";
-	private static final String UPDATE_PEN_EGG = "UPDATE TABLE `{prefix}pen` SET egg = ? WHERE pen = ?";
-	private static final String UPDATE_PEN_SETTINGS = "UPDATE TABLE `{prefix}pen` SET settings = ? WHERE pen = ?";
-	private static final String UPDATE_PEN_UNLOCK_STATUS = "UPDATE TABLE `{prefix}pen` SET unlocked = ?, dateUnlock = ? WHERE pen = ?";
+	private static final String UPDATE_RANCH_STATISTICS = "UPDATE `{prefix}ranch` SET stats = ? WHERE owner = ? AND ranch = ?";
+	private static final String UPDATE_PEN_SLOT = "UPDATE `{prefix}pen` SET {{pen_slot}} = ? WHERE pen = ?";
+	private static final String UPDATE_PEN_EGG = "UPDATE `{prefix}pen` SET egg = ? WHERE pen = ?";
+	private static final String UPDATE_PEN_SETTINGS = "UPDATE `{prefix}pen` SET settings = ? WHERE pen = ?";
+	private static final String UPDATE_PEN_UNLOCK_STATUS = "UPDATE `{prefix}pen` SET unlocked = ?, dateUnlock = ? WHERE pen = ?";
 
 	private static final String DELETE_RANCH = "DELETE FROM `{prefix}ranch` WHERE owner = ?";
 	private static final String DELETE_PEN_BASE = "DELETE FROM `{prefix}pens` WHERE ranch = ?";
 	private static final String DELETE_PEN_DATA = "DELETE FROM `{prefix}pen` WHERE pen = ?";
 
 	private static final String GET_RANCH =
-			"SELECT r.identifier, r.stats, p.pen, d.slot1, d.slot2, d.egg, d.unlocked, d.dateUnlock, d.settings " +
-			"FROM `{prefix}ranch` r " +
-			"INNER JOIN `{prefix}pens` p, `{prefix}pen` d " +
-			"WHERE r.owner = ? AND p.ranch = r.ranch AND p.pen = d.pen";
+			"SELECT ranch, stats " +
+			"FROM `{prefix}ranch`" +
+			"WHERE owner = ?";
+	private static final String GET_RANCH_DATA =
+			"SELECT p.pen, p.id, d.slot1, d.slot2, d.egg, d.unlocked, d.dateUnlock, d.settings " +
+			"FROM `{prefix}pens` p " +
+			"INNER JOIN `{prefix}pen` d " +
+			"WHERE p.ranch = ? AND p.pen = d.pen";
 
 	@Deprecated
 	private static final String FETCH_OLD = "SELECT * FROM {prefix}listings_v2";
@@ -268,16 +272,44 @@ public class SqlImplementation implements StorageImplementation {
 
 	@Override
 	public Ranch getRanch(UUID player) throws Exception {
+		Ranch ranch = null;
 		Connection connection = connectionFactory.getConnection();
 		PreparedStatement ps = connection.prepareStatement(processor.apply(GET_RANCH));
+		ps.setString(1, player.toString());
 		ResultSet results = ps.executeQuery();
 
-		Ranch ranch;
-		while(results.next()) {
+		if (results.next()) {
+			Ranch.RanchBuilder builder = plugin.getService().getBuilderRegistry().createFor(Ranch.RanchBuilder.class);
 
+			String rID = results.getString("ranch");
+			builder.identifier(UUID.fromString(rID));
+			builder.owner(player);
+			builder.stats(plugin.getGson().fromJson(results.getString("stats"), Statistics.class));
+
+			PreparedStatement ps2 = connection.prepareStatement(processor.apply(GET_RANCH_DATA));
+			ps2.setString(1, rID);
+			ResultSet rs2 = ps2.executeQuery();
+
+			List<Pen> pens = Lists.newArrayList();
+			while (rs2.next()) {
+				Pen.PenBuilder pb = plugin.getService().getBuilderRegistry().createFor(Pen.PenBuilder.class);
+				pb.identifier(UUID.fromString(rs2.getString(1)));
+				pb.id(rs2.getInt(2));
+
+				pb.slot1(plugin.getGson().fromJson(rs2.getString(3), DaycarePokemonWrapper.class));
+				pb.slot2(plugin.getGson().fromJson(rs2.getString(4), DaycarePokemonWrapper.class));
+				pb.egg(plugin.getGson().fromJson(rs2.getString(5), DaycarePokemonWrapper.class));
+
+				pb.unlocked(rs2.getBoolean(6));
+				pb.dateUnlocked(rs2.getTimestamp(7).toLocalDateTime());
+				pb.settings(plugin.getGson().fromJson(rs2.getString(8), Settings.class));
+				pens.add(pb.build());
+			}
+
+			ranch = builder.pens(pens).build();
 		}
 
-		return null;
+		return ranch;
 	}
 
 	@Override

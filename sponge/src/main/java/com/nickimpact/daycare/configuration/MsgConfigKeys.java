@@ -51,7 +51,7 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	// General
 	public static final ConfigKey<String> PLUGIN_PREFIX = stringKey("general.plugin.prefix", "&eDaycare &7\u00bb");
 	public static final ConfigKey<String> PLUGIN_ERROR = stringKey("general.plugin.error-prefix", "&eDaycare &7(&cError&7)");
-	public static final ConfigKey<String> UNLOCK_PEN = stringKey("general.pen.unlock", "{{daycare_prefix}} &7You unlocked &ePen {{pen}} &7for &a{{price}}&7!");
+	public static final ConfigKey<String> UNLOCK_PEN = stringKey("general.pen.unlock", "{{daycare_prefix}} &7You unlocked &ePen {{pen}} &7for &a{{daycare_price}}&7!");
 	public static final ConfigKey<List<String>> STATISTICS = listKey("general.player.stats", Lists.newArrayList(
 			"&7Eggs Collected: &e{{stats_eggs_collected}}",
 			"&7Eggs Dismissed: &e{{stats_eggs_dismissed}}",
@@ -154,6 +154,7 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	public static final ConfigKey<String> RANCH_UI_PLAYER_INFO = stringKey("ui.main-menu.player-info", "&ePlayer Info");
 	public static final ConfigKey<String> RANCH_UI_SETTINGS = stringKey("ui.main-menu.settings", "&eSettings");
 	public static final ConfigKey<String> RANCH_UI_STATS = stringKey("ui.main-menu.statistics", "&eStatistics");
+	public static final ConfigKey<String> RANCH_PRICE_TAG = stringKey("ui.main-menu.price-tag", "&7Price: &e{{daycare_price}}");
 	public static final ConfigKey<String> RANCH_UI_EGG_AVAILABLE = stringKey("ui.main-menu.pen.egg-available", "&e\u2730 &aEgg Available &e\u2730");
 	public static final ConfigKey<String> RANCH_UI_PEN_ID = stringKey("ui.main-menu.pen.id", "&ePen {{pen_id}}");
 	public static final ConfigKey<String> RANCH_UI_PEN_INFO = stringKey("ui.main-menu.pen.slots", "&7Slot {{slot_id}}&7: &e{{pokemon}} {{gender_icon:s}}&7(&aLvl {{calced_lvl}}&7)");
@@ -166,6 +167,7 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 
 	// Pen UI
 	public static final ConfigKey<String> PEN_UI_TITLE = stringKey("ui.pen.title", "&cDaycare &7\u00bb &3Pen {{pen_id}}");
+	public static final ConfigKey<String> CONFIRM_UI_TITLE = stringKey("ui.pen.title", "&cDaycare &7\u00bb &3Confirm Purchase");
 	public static final ConfigKey<String> PEN_EMPTY_SLOT = stringKey("ui.pen.empty-slot", "&cEmpty &7(Click to Add a Pokemon)");
 	public static final ConfigKey<String> PEN_NO_EGG = stringKey("ui.pen.items.no-egg", "&cNo Egg Available...");
 	public static final ConfigKey<List<String>> PEN_EGG_PRESENT = listKey("ui.pen.items.egg-present", Lists.newArrayList(
@@ -204,7 +206,6 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 
 	// Party UI
 	public static final ConfigKey<String> PARTY_TITLE = stringKey("ui.party.title", "&cDaycare &7\u00bb &3Party");
-	public static final ConfigKey<String> PARTY_CONFIRM = stringKey("ui.party.items.confirm", "&aConfirm Selection");
 	public static final ConfigKey<String> PARTY_PC = stringKey("ui.party.items.pc", "&eOpen PC");
 	public static final ConfigKey<String> PARTY_NO_SELECTION = stringKey("ui.party.items.no-selection", "&cPlease Pick a Pokemon");
 
@@ -253,6 +254,17 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	public static final ConfigKey<String> BREEDABLE_TRANSLATION = stringKey("translations.breedable", "Breedable");
 	public static final ConfigKey<String> UNBREEDABLE_TRANSLATION = stringKey("translations.unbreedable", "Unbreedable");
 	public static final ConfigKey<String> POKERUS_TRANSLATION = stringKey("translations.pokerus", "PKRS");
+
+	public static final ConfigKey<String> CONFIRM = stringKey("ui.items.confirm", "&aConfirm");
+	public static final ConfigKey<String> CANCEL = stringKey("ui.items.cancel", "&cCancel");
+
+	public static final ConfigKey<List<String>> CONFIRM_PEN_DETAILS = listKey("ui.confirm.pen-details", Lists.newArrayList(
+			"&7Price to Unlock: &e{{daycare_price}}"
+	));
+	public static final ConfigKey<List<String>> CONFIRM_PEN_BUTTON = listKey("ui.confirm.button", Lists.newArrayList(
+			"&7By clicking here, you agree to",
+			"&7paying the price of: &e{{daycare_price}}"
+	));
 
 	private static final Map<String, ConfigKey<?>> KEYS;
 	private static final int SIZE;

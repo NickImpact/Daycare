@@ -33,6 +33,10 @@ public class TextParsingUtils {
 
 	private SpongeDaycarePlugin plugin;
 
+	public TextParsingUtils(SpongeDaycarePlugin plugin) {
+		this.plugin = plugin;
+	}
+
 	private NucleusTextTemplate getTemplate(String text) throws NucleusException {
 		return NucleusAPI.getMessageTokenService().createFromString(text);
 	}

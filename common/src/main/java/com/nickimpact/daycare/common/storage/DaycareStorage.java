@@ -61,6 +61,7 @@ public class DaycareStorage implements IDaycareStorage {
 			try {
 				return supplier.call();
 			} catch (Exception e) {
+				e.printStackTrace();
 				if (e instanceof RuntimeException) {
 					throw (RuntimeException) e;
 				}

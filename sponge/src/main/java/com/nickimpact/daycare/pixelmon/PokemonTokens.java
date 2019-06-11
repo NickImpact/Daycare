@@ -3,6 +3,7 @@ package com.nickimpact.daycare.pixelmon;
 import com.google.common.collect.Maps;
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.implementation.SpongeDaycarePokemonWrapper;
+import com.nickimpact.daycare.text.TokenHolder;
 import com.nickimpact.daycare.text.Translator;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import org.spongepowered.api.text.Text;
@@ -15,7 +16,7 @@ import java.util.Optional;
  *
  * @author NickImpact (Nick DeGruccio)
  */
-public class PokemonTokens {
+public class PokemonTokens implements TokenHolder {
 
 	private static Map<String, Translator> tokens = Maps.newHashMap();
 
@@ -88,7 +89,7 @@ public class PokemonTokens {
 		tokens.put("texture", (p, v, m) -> Optional.of(getPokemonInfo(getPokemonFromVariableIfExists(m), EnumPokemonFields.TEXTURE)));
 	}
 
-	public static Map<String, Translator> getTokens() {
+	public Map<String, Translator> getTokens() {
 		return tokens;
 	}
 

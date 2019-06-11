@@ -7,8 +7,6 @@ import com.nickimpact.impactor.api.configuration.Config;
 import com.nickimpact.impactor.api.logging.Logger;
 import lombok.Getter;
 
-import java.nio.file.Path;
-
 @Getter
 public abstract class DaycarePlugin implements IDaycarePlugin {
 
@@ -16,7 +14,6 @@ public abstract class DaycarePlugin implements IDaycarePlugin {
 
 	protected Logger logger;
 
-	protected Path configDir;
 	protected Config config;
 
 	protected Gson gson;

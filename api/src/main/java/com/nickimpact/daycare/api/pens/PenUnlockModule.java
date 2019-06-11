@@ -2,12 +2,12 @@ package com.nickimpact.daycare.api.pens;
 
 import java.util.UUID;
 
-public interface PenUnlockModule<T> {
+public interface PenUnlockModule {
 
-	T getRequirement();
+	String getRequirement(int pen);
 
-	boolean canUnlock(UUID owner, int pen);
+	boolean canPay(UUID owner, int pen);
 
-	boolean process(UUID owner, int pen);
+	boolean pay(UUID owner, int pen);
 
 }

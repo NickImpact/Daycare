@@ -1,6 +1,9 @@
 package com.nickimpact.daycare.api.pens;
 
 
+import com.nickimpact.daycare.api.util.PluginInstance;
+import com.nickimpact.impactor.api.building.Builder;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -8,6 +11,7 @@ import java.util.UUID;
 public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 
 	private UUID identifier;
+	private int id;
 
 	protected T slot1;
 	protected T slot2;
@@ -24,8 +28,20 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 	// Time tracking settings
 	private int time;
 
-	public Pen() {
+	public Pen(int id) {
 		this.identifier = UUID.randomUUID();
+		this.id = id;
+	}
+
+	protected Pen(UUID identifier, int id, T slot1, T slot2, T egg, boolean unlocked, LocalDateTime dateUnlocked, Settings settings) {
+		this.identifier = identifier;
+		this.id = id;
+		this.slot1 = slot1;
+		this.slot2 = slot2;
+		this.egg = egg;
+		this.unlocked = unlocked;
+		this.dateUnlocked = dateUnlocked;
+		this.settings = settings;
 	}
 
 	public Optional<T> getAtPosition(int slot) {
@@ -97,6 +113,10 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		return identifier;
 	}
 
+	public int getID() {
+		return this.id;
+	}
+
 	public boolean isDirty() {
 		return dirty;
 	}
@@ -107,5 +127,29 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 
 	public LocalDateTime getDateUnlocked() {
 		return dateUnlocked;
+	}
+
+	public static PenBuilder builder() {
+		return PluginInstance.getPlugin().getService().getBuilderRegistry().createFor(PenBuilder.class);
+	}
+
+	public interface PenBuilder extends Builder<Pen> {
+
+		PenBuilder identifier(UUID uuid);
+
+		PenBuilder id(int id);
+
+		PenBuilder unlocked(boolean flag);
+
+		PenBuilder dateUnlocked(LocalDateTime time);
+
+		PenBuilder slot1(DaycarePokemonWrapper wrapper);
+
+		PenBuilder slot2(DaycarePokemonWrapper wrapper);
+
+		PenBuilder egg(DaycarePokemonWrapper wrapper);
+
+		PenBuilder settings(Settings settings);
+
 	}
 }
