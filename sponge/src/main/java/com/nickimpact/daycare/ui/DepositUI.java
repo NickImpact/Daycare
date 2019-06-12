@@ -1,4 +1,4 @@
 package com.nickimpact.daycare.ui;
 
-public class SelectionUI {
+public class DepositUI {
 }

@@ -1,6 +1,7 @@
 package com.nickimpact.daycare.api.pens;
 
 
+import com.nickimpact.daycare.api.breeding.BreedStage;
 import com.nickimpact.daycare.api.util.PluginInstance;
 import com.nickimpact.impactor.api.building.Builder;
 
@@ -17,6 +18,7 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 	protected T slot2;
 
 	protected T egg;
+	private BreedStage stage;
 
 	private boolean unlocked;
 	private LocalDateTime dateUnlocked = LocalDateTime.now();
@@ -129,6 +131,17 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		return dateUnlocked;
 	}
 
+	public BreedStage getStage() {
+		return this.stage;
+	}
+
+	public void advanceBreeding() {
+		this.stage = BreedStage.values()[this.stage.ordinal() + 1];
+		if(this.stage == BreedStage.BRED) {
+			this.stage = BreedStage.SETTLING;
+		}
+	}
+
 	public static PenBuilder builder() {
 		return PluginInstance.getPlugin().getService().getBuilderRegistry().createFor(PenBuilder.class);
 	}
@@ -148,6 +161,8 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		PenBuilder slot2(DaycarePokemonWrapper wrapper);
 
 		PenBuilder egg(DaycarePokemonWrapper wrapper);
+
+		PenBuilder stage(BreedStage stage);
 
 		PenBuilder settings(Settings settings);
 

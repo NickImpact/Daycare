@@ -40,4 +40,8 @@ public class Settings {
 	public boolean isDirty() {
 		return dirty;
 	}
+
+	public void clean() {
+		this.dirty = false;
+	}
 }

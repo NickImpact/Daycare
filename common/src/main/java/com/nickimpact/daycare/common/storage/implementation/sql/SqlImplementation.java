@@ -52,6 +52,7 @@ public class SqlImplementation implements StorageImplementation {
 	private static final String UPDATE_RANCH_STATISTICS = "UPDATE `{prefix}ranch` SET stats = ? WHERE owner = ? AND ranch = ?";
 	private static final String UPDATE_PEN_SLOT = "UPDATE `{prefix}pen` SET {{pen_slot}} = ? WHERE pen = ?";
 	private static final String UPDATE_PEN_EGG = "UPDATE `{prefix}pen` SET egg = ? WHERE pen = ?";
+	private static final String UPDATE_PEN_STAGE = "UPDATE `{prefix}pen` SET stage = ? WHERE pen = ?";
 	private static final String UPDATE_PEN_SETTINGS = "UPDATE `{prefix}pen` SET settings = ? WHERE pen = ?";
 	private static final String UPDATE_PEN_UNLOCK_STATUS = "UPDATE `{prefix}pen` SET unlocked = ?, dateUnlock = ? WHERE pen = ?";
 
@@ -64,7 +65,7 @@ public class SqlImplementation implements StorageImplementation {
 			"FROM `{prefix}ranch`" +
 			"WHERE owner = ?";
 	private static final String GET_RANCH_DATA =
-			"SELECT p.pen, p.id, d.slot1, d.slot2, d.egg, d.unlocked, d.dateUnlock, d.settings " +
+			"SELECT p.pen, p.id, d.slot1, d.slot2, d.egg, d.unlocked, d.dateUnlock, d.settings, d.stage " +
 			"FROM `{prefix}pens` p " +
 			"INNER JOIN `{prefix}pen` d " +
 			"WHERE p.ranch = ? AND p.pen = d.pen";
@@ -224,13 +225,20 @@ public class SqlImplementation implements StorageImplementation {
 					settings.setClob(1, s);
 					settings.setString(2, pen.getIdentifier().toString());
 					settings.executeUpdate();
+					pen.getSettings().clean();
 				}
+
+				PreparedStatement stage = connection.prepareStatement(processor.apply(UPDATE_PEN_STAGE));
+				stage.setString(1, pen.getStage().name());
+				stage.setString(2, pen.getIdentifier().toString());
+				stage.executeUpdate();
 
 				PreparedStatement unlocked = connection.prepareStatement(processor.apply(UPDATE_PEN_UNLOCK_STATUS));
 				unlocked.setBoolean(1, pen.isUnlocked());
 				unlocked.setTimestamp(2, Timestamp.valueOf(pen.getDateUnlocked()));
 				unlocked.setString(3, pen.getIdentifier().toString());
 				unlocked.executeUpdate();
+				pen.clean();
 			}
 		}
 

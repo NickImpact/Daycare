@@ -120,7 +120,8 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	));
 
 	// Pens
-	public static final ConfigKey<String> POKEMON_TITLE_PEN = stringKey("pens.pen-title", "&e{{pokemon}} {{shiny:s}}&7| &bLvl {{calced_lvl}}");
+	public static final ConfigKey<String> POKEMON_TITLE_PEN = stringKey("pens.pen-title.pokemon", "&e{{pokemon}} {{shiny:s}}&7| &bLvl {{calced_lvl}}");
+	public static final ConfigKey<String> POKEMON_EGG_TITLE_PEN = stringKey("pens.pen-title.egg", "&e{{pokemon}} {{shiny}}");
 	public static final ConfigKey<List<String>> POKEMON_LORE_PEN = listKey("pens.pen-lore", Lists.newArrayList(
 			"&7Nickname: &e{{nickname}}",
 			"&7Gained Levels: &e{{gained_lvls}}",
@@ -146,8 +147,8 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	));
 
 	// Common Items
-	public static final ConfigKey<String> ITEM_BACK = stringKey("ui.common.items.back.title", "&c\u2190 Go Back \u2190");
-	public static final ConfigKey<String> EGG = stringKey("ui.common.items.egg", "&eEgg");
+	public static final ConfigKey<String> ITEM_BACK = stringKey("ui.common.common.back.title", "&c\u2190 Go Back \u2190");
+	public static final ConfigKey<String> EGG = stringKey("ui.common.common.egg", "&eEgg");
 
 	// Ranch UI
 	public static final ConfigKey<String> RANCH_UI_TITLE = stringKey("ui.main-menu.title", "&cDaycare &7\u00bb &3Main Menu");
@@ -169,8 +170,8 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	public static final ConfigKey<String> PEN_UI_TITLE = stringKey("ui.pen.title", "&cDaycare &7\u00bb &3Pen {{pen_id}}");
 	public static final ConfigKey<String> CONFIRM_UI_TITLE = stringKey("ui.pen.title", "&cDaycare &7\u00bb &3Confirm Purchase");
 	public static final ConfigKey<String> PEN_EMPTY_SLOT = stringKey("ui.pen.empty-slot", "&cEmpty &7(Click to Add a Pokemon)");
-	public static final ConfigKey<String> PEN_NO_EGG = stringKey("ui.pen.items.no-egg", "&cNo Egg Available...");
-	public static final ConfigKey<List<String>> PEN_EGG_PRESENT = listKey("ui.pen.items.egg-present", Lists.newArrayList(
+	public static final ConfigKey<String> PEN_NO_EGG = stringKey("ui.pen.common.no-egg", "&cNo Egg Available...");
+	public static final ConfigKey<List<String>> PEN_EGG_PRESENT = listKey("ui.pen.common.egg-present", Lists.newArrayList(
 			"&7Click to claim!"
 	));
 	public static final ConfigKey<List<String>> PEN_EGG_CLAIM = listKey("ui.pen.actions.claim-egg", Lists.newArrayList(
@@ -206,16 +207,16 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 
 	// Party UI
 	public static final ConfigKey<String> PARTY_TITLE = stringKey("ui.party.title", "&cDaycare &7\u00bb &3Party");
-	public static final ConfigKey<String> PARTY_PC = stringKey("ui.party.items.pc", "&eOpen PC");
-	public static final ConfigKey<String> PARTY_NO_SELECTION = stringKey("ui.party.items.no-selection", "&cPlease Pick a Pokemon");
+	public static final ConfigKey<String> PARTY_PC = stringKey("ui.party.common.pc", "&eOpen PC");
+	public static final ConfigKey<String> PARTY_NO_SELECTION = stringKey("ui.party.common.no-selection", "&cPlease Pick a Pokemon");
 
 	// PC UI
 	public static final ConfigKey<String> PC_TITLE = stringKey("ui.pc.title", "&cDaycare &7\u00bb &3PC");
 
 	// Settings UI
 	public static ConfigKey<String> SETTINGS_UI_TITLE = stringKey("ui.settings.title", "&cDaycare &7\u00bb &3Settings");
-	public static ConfigKey<String> SETINGS_MOVES_TITLE = stringKey("ui.settings.items.moves-title", "&eLearn Moves?");
-	public static final ConfigKey<List<String>> SETTINGS_MOVES_LORE = listKey("ui.settings.items.moves-lore", Lists.newArrayList(
+	public static ConfigKey<String> SETINGS_MOVES_TITLE = stringKey("ui.settings.common.moves-title", "&eLearn Moves?");
+	public static final ConfigKey<List<String>> SETTINGS_MOVES_LORE = listKey("ui.settings.common.moves-lore", Lists.newArrayList(
 			"&7Should pokemon learn moves",
 			"&7as they level up in the",
 			"&7daycare?",
@@ -227,14 +228,14 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 			"",
 			"&cREQUIRES PIXELMON 6.3.X AND UP!"
 	));
-	public static ConfigKey<String> SETINGS_LEVEL_TITLE = stringKey("ui.settings.items.leveling-title", "&eAllow leveling?");
-	public static final ConfigKey<List<String>> SETTINGS_LEVEL_LORE = listKey("ui.settings.items.leveling-lore", Lists.newArrayList(
+	public static ConfigKey<String> SETINGS_LEVEL_TITLE = stringKey("ui.settings.common.leveling-title", "&eAllow leveling?");
+	public static final ConfigKey<List<String>> SETTINGS_LEVEL_LORE = listKey("ui.settings.common.leveling-lore", Lists.newArrayList(
 			"&7Should pokemon be able",
 			"&7to level up as they spend",
 			"&7time in the daycare?"
 	));
-	public static ConfigKey<String> SETINGS_EVOLVE_TITLE = stringKey("ui.settings.items.evolve-title", "&eAllow Pokemon to Evolve?");
-	public static final ConfigKey<List<String>> SETTINGS_EVOLVE_LORE = listKey("ui.settings.items.evolve-lore", Lists.newArrayList(
+	public static ConfigKey<String> SETINGS_EVOLVE_TITLE = stringKey("ui.settings.common.evolve-title", "&eAllow Pokemon to Evolve?");
+	public static final ConfigKey<List<String>> SETTINGS_EVOLVE_LORE = listKey("ui.settings.common.evolve-lore", Lists.newArrayList(
 			"&7Should pokemon be able",
 			"&7to evolve from leveling up",
 			"&7in the daycare?",
@@ -255,15 +256,20 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	public static final ConfigKey<String> UNBREEDABLE_TRANSLATION = stringKey("translations.unbreedable", "Unbreedable");
 	public static final ConfigKey<String> POKERUS_TRANSLATION = stringKey("translations.pokerus", "PKRS");
 
-	public static final ConfigKey<String> CONFIRM = stringKey("ui.items.confirm", "&aConfirm");
-	public static final ConfigKey<String> CANCEL = stringKey("ui.items.cancel", "&cCancel");
+	public static final ConfigKey<String> CONFIRM = stringKey("ui.common.confirm", "&aConfirm");
+	public static final ConfigKey<String> CANCEL = stringKey("ui.common.cancel", "&cCancel");
 
 	public static final ConfigKey<List<String>> CONFIRM_PEN_DETAILS = listKey("ui.confirm.pen-details", Lists.newArrayList(
 			"&7Price to Unlock: &e{{daycare_price}}"
 	));
 	public static final ConfigKey<List<String>> CONFIRM_PEN_BUTTON = listKey("ui.confirm.button", Lists.newArrayList(
 			"&7By clicking here, you agree to",
-			"&7paying the price of: &e{{daycare_price}}"
+			"&7pay the price of: &e{{daycare_price}}"
+	));
+	public static final ConfigKey<List<String>> CONFIRM_RETRIEVAL_POKEMON = listKey("ui.confirm.retrieve-pokemon", Lists.newArrayList(
+			"&7By clicking here, you agree to",
+			"&7pay the price of &e{{daycare_price}}",
+			"&7in order to retrieve your &a{{pokemon}}"
 	));
 
 	private static final Map<String, ConfigKey<?>> KEYS;

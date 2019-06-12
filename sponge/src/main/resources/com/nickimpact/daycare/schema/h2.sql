@@ -21,6 +21,7 @@ CREATE TABLE `{prefix}pen` (
   `unlocked`    TINYINT     NOT NULL,
   `dateUnlock`  TIMESTAMP,
   `settings`    CLOB        NOT NULL,
+  `stage`       VARCHAR(50) NOT NULL,
   PRIMARY KEY (`pen`),
   FOREIGN KEY (`pen`) REFERENCES `{prefix}pens`(`pen`)
 );
