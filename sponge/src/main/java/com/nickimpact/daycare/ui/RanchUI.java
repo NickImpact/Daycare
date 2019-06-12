@@ -99,7 +99,7 @@ public class RanchUI {
 
 			SpongeIcon icon = new SpongeIcon(display);
 			icon.addListener(clickable -> {
-				new PenUI(this.viewer, pen).open();
+				new PenUI(this.viewer, this.ranch, pen).open();
 			});
 			return icon;
 		} else {

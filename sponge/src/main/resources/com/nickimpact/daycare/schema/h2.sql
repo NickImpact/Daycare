@@ -9,7 +9,7 @@ CREATE TABLE `{prefix}pens` (
   `ranch`   VARCHAR(36) NOT NULL,
   `pen`     VARCHAR(36) NOT NULL,
   `id`      INTEGER     NOT NULL,
-  PRIMARY KEY (`ranch`),
+  PRIMARY KEY (`ranch`, `pen`),
   FOREIGN KEY (`ranch`) REFERENCES `{prefix}ranch`(`ranch`)
 );
 
@@ -21,8 +21,7 @@ CREATE TABLE `{prefix}pen` (
   `unlocked`    TINYINT     NOT NULL,
   `dateUnlock`  TIMESTAMP,
   `settings`    CLOB        NOT NULL,
-  `stage`       VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`pen`),
+  `stage`       VARCHAR(50),
   FOREIGN KEY (`pen`) REFERENCES `{prefix}pens`(`pen`)
 );
 

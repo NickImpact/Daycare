@@ -2,12 +2,10 @@ package com.nickimpact.daycare.api.manager;
 
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.api.pens.Ranch;
-import com.nickimpact.daycare.api.util.PluginInstance;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RanchManager {
 

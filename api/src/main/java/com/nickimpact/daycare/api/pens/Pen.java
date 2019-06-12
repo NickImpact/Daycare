@@ -35,7 +35,7 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		this.id = id;
 	}
 
-	protected Pen(UUID identifier, int id, T slot1, T slot2, T egg, boolean unlocked, LocalDateTime dateUnlocked, Settings settings) {
+	protected Pen(UUID identifier, int id, T slot1, T slot2, T egg, boolean unlocked, LocalDateTime dateUnlocked, Settings settings, BreedStage stage) {
 		this.identifier = identifier;
 		this.id = id;
 		this.slot1 = slot1;
@@ -44,6 +44,7 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		this.unlocked = unlocked;
 		this.dateUnlocked = dateUnlocked;
 		this.settings = settings;
+		this.stage = stage;
 	}
 
 	public Optional<T> getAtPosition(int slot) {

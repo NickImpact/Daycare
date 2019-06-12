@@ -272,6 +272,28 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 			"&7in order to retrieve your &a{{pokemon}}"
 	));
 
+	public static final ConfigKey<String> BREED_STAGES_NOT_REACHED = stringKey("ui.pen.breed-stage.not-reached", "&cNot yet achieved...");
+	public static final ConfigKey<List<String>> BREED_STAGES_SETTLING = listKey("ui.pen.breed-stage.settling", Lists.newArrayList(
+			"&7Both pokemon are now settling in!"
+	));
+	public static final ConfigKey<List<String>> BREED_STAGES_SOCIALIZING = listKey("ui.pen.breed-stage.socializing", Lists.newArrayList(
+			"&7Both pokemon have started talking",
+			"&7to each other!"
+	));
+	public static final ConfigKey<List<String>> BREED_STAGES_IN_LOVE = listKey("ui.pen.breed-stage.not-reached", Lists.newArrayList(
+			"&7Both pokemon have fallen in &dlove",
+			"&7with each other!"
+	));
+	public static final ConfigKey<List<String>> BREED_STAGES_OUT_ON_THE_TOWN = listKey("ui.pen.breed-stage.not-reached", Lists.newArrayList(
+			"&7The Daycare officials report that",
+			"&7your pokemon have gone out for",
+			"&7a night on the town!"
+	));
+	public static final ConfigKey<List<String>> BREED_STAGES_ONE_NIGHT_STAND = listKey("ui.pen.breed-stage.not-reached", Lists.newArrayList(
+			"&7Both pokemon seem to be feeling",
+			"&7a little romantic..."
+	));
+
 	private static final Map<String, ConfigKey<?>> KEYS;
 	private static final int SIZE;
 

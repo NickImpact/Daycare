@@ -27,6 +27,7 @@ package com.nickimpact.daycare.common.storage.implementation.sql;
 
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.api.IDaycarePlugin;
+import com.nickimpact.daycare.api.breeding.BreedStage;
 import com.nickimpact.daycare.api.pens.*;
 import com.nickimpact.daycare.common.storage.implementation.StorageImplementation;
 import com.nickimpact.daycare.common.storage.implementation.sql.connection.ConnectionFactory;
@@ -36,6 +37,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +48,7 @@ import java.util.function.Function;
 public class SqlImplementation implements StorageImplementation {
 
 	private static final String ADD_RANCH = "INSERT INTO `{prefix}ranch` VALUES(?, ?, ?)";
-	private static final String ADD_PEN = "INSERT INTO `{prefix}pens` VALUES(?, ?)";
+	private static final String ADD_PEN = "INSERT INTO `{prefix}pens` VALUES(?, ?, ?)";
 	private static final String ADD_PEN_DATA = "INSERT INTO `{prefix}pen` (pen, unlocked, settings) VALUES(?, ?, ?)";
 
 	private static final String UPDATE_RANCH_STATISTICS = "UPDATE `{prefix}ranch` SET stats = ? WHERE owner = ? AND ranch = ?";
@@ -172,10 +174,16 @@ public class SqlImplementation implements StorageImplementation {
 			PreparedStatement ps2 = connection.prepareStatement(this.processor.apply(ADD_PEN));
 			ps2.setString(1, ranch.getIdentifier().toString());
 			ps2.setString(2, pen.getIdentifier().toString());
+			ps2.setInt(3, pen.getID());
 			ps2.executeUpdate();
 
 			PreparedStatement ps3 = connection.prepareStatement(this.processor.apply(ADD_PEN_DATA));
 			ps3.setString(1, pen.getIdentifier().toString());
+			ps3.setBoolean(2, pen.isUnlocked());
+
+			Clob settings = connection.createClob();
+			settings.setString(1, plugin.getGson().toJson(pen.getSettings()));
+			ps3.setClob(3, settings);
 			ps3.executeUpdate();
 		}
 
@@ -229,7 +237,11 @@ public class SqlImplementation implements StorageImplementation {
 				}
 
 				PreparedStatement stage = connection.prepareStatement(processor.apply(UPDATE_PEN_STAGE));
-				stage.setString(1, pen.getStage().name());
+				if(pen.getStage() == null) {
+					stage.setNull(1, Types.VARCHAR);
+				} else {
+					stage.setString(1, pen.getStage().name());
+				}
 				stage.setString(2, pen.getIdentifier().toString());
 				stage.executeUpdate();
 
@@ -310,8 +322,16 @@ public class SqlImplementation implements StorageImplementation {
 				pb.egg(plugin.getGson().fromJson(rs2.getString(5), DaycarePokemonWrapper.class));
 
 				pb.unlocked(rs2.getBoolean(6));
-				pb.dateUnlocked(rs2.getTimestamp(7).toLocalDateTime());
+				Timestamp timestamp = rs2.getTimestamp(7);
+				if(timestamp != null) {
+					pb.dateUnlocked(rs2.getTimestamp(7).toLocalDateTime());
+				}
 				pb.settings(plugin.getGson().fromJson(rs2.getString(8), Settings.class));
+
+				String stage = rs2.getString(9);
+				if(stage != null) {
+					pb.stage(BreedStage.valueOf(rs2.getString(9)));
+				}
 				pens.add(pb.build());
 			}
 

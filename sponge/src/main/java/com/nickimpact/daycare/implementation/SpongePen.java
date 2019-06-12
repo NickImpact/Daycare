@@ -1,5 +1,6 @@
 package com.nickimpact.daycare.implementation;
 
+import com.nickimpact.daycare.api.breeding.BreedStage;
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Settings;
@@ -19,7 +20,7 @@ public class SpongePen extends Pen<SpongeDaycarePokemonWrapper, Pokemon> {
 	}
 
 	SpongePen(SpongePenBuilder builder) {
-		super(builder.uuid, builder.id, builder.slot1, builder.slot2, builder.egg, builder.unlocked, builder.dateUnlocked, builder.settings);
+		super(builder.uuid, builder.id, builder.slot1, builder.slot2, builder.egg, builder.unlocked, builder.dateUnlocked, builder.settings, builder.stage);
 	}
 
 	@Override
@@ -67,6 +68,8 @@ public class SpongePen extends Pen<SpongeDaycarePokemonWrapper, Pokemon> {
 
 		private Settings settings;
 
+		private BreedStage stage;
+
 		@Override
 		public PenBuilder identifier(UUID uuid) {
 			this.uuid = uuid;
@@ -106,6 +109,12 @@ public class SpongePen extends Pen<SpongeDaycarePokemonWrapper, Pokemon> {
 		@Override
 		public PenBuilder egg(DaycarePokemonWrapper wrapper) {
 			this.egg = (SpongeDaycarePokemonWrapper) wrapper;
+			return this;
+		}
+
+		@Override
+		public PenBuilder stage(BreedStage stage) {
+			this.stage = stage;
 			return this;
 		}
 
