@@ -78,7 +78,7 @@ public class PenUI {
 		layout.slot(gray, 33);
 
 		BreedStage stage = this.pen.getStage();
-		stage = BreedStage.SOCIALIZING;             // TEMP
+		stage = BreedStage.OUT_ON_THE_TOWN;             // TEMP
 		if(stage != null) {
 			ItemStack notReached = ItemStack.builder()
 					.itemType(ItemTypes.STAINED_GLASS_PANE)
@@ -96,7 +96,7 @@ public class PenUI {
 						.itemType(ItemTypes.STAINED_GLASS_PANE)
 						.add(Keys.DYE_COLOR, DyeColors.LIME)
 						.add(Keys.DISPLAY_NAME, Text.of(TextColors.YELLOW, s.name()))
-						.add(Keys.ITEM_LORE, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(this.viewer, this.getForStage(stage), null, null))
+						.add(Keys.ITEM_LORE, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(this.viewer, this.getForStage(s), null, null))
 						.build();
 				layout.slot(new SpongeIcon(st), index++);
 			}

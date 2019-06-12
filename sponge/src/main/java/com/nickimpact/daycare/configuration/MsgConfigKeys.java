@@ -280,16 +280,16 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 			"&7Both pokemon have started talking",
 			"&7to each other!"
 	));
-	public static final ConfigKey<List<String>> BREED_STAGES_IN_LOVE = listKey("ui.pen.breed-stage.not-reached", Lists.newArrayList(
+	public static final ConfigKey<List<String>> BREED_STAGES_IN_LOVE = listKey("ui.pen.breed-stage.in-love", Lists.newArrayList(
 			"&7Both pokemon have fallen in &dlove",
 			"&7with each other!"
 	));
-	public static final ConfigKey<List<String>> BREED_STAGES_OUT_ON_THE_TOWN = listKey("ui.pen.breed-stage.not-reached", Lists.newArrayList(
+	public static final ConfigKey<List<String>> BREED_STAGES_OUT_ON_THE_TOWN = listKey("ui.pen.breed-stage.out-on-the-town", Lists.newArrayList(
 			"&7The Daycare officials report that",
 			"&7your pokemon have gone out for",
 			"&7a night on the town!"
 	));
-	public static final ConfigKey<List<String>> BREED_STAGES_ONE_NIGHT_STAND = listKey("ui.pen.breed-stage.not-reached", Lists.newArrayList(
+	public static final ConfigKey<List<String>> BREED_STAGES_ONE_NIGHT_STAND = listKey("ui.pen.breed-stage.one-night-stand", Lists.newArrayList(
 			"&7Both pokemon seem to be feeling",
 			"&7a little romantic..."
 	));
