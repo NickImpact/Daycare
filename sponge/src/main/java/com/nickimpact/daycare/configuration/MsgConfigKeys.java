@@ -110,7 +110,6 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	public static final ConfigKey<String> CMD_REMOVENPC_RIGHTCLICK_NOTICE = stringKey("commands.removenpc.right-click-notice", "{{daycare_prefix}} &7Right click on a registered Daycare NPC to clear their functionality!");
 	public static final ConfigKey<String> CMD_PRICING_NO_ECONOMY_SERVICE = stringKey("commands.pricing.error.no-economy-service", "{{daycare_error}} &7There is no economy service available to perform that action...");
 
-
 	// Admin
 	public static final ConfigKey<List<String>> NPC_REGISTERED = listKey("admin.npcs.register", Collections.singletonList(
 			"{{daycare_prefix}} &7You've added this NPC as a Daycare Representative!"
@@ -145,6 +144,7 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 			"&7IVs: &e{{ivs_total}}&7/&e186 &7(&a{{ivs_percent}}&7)",
 			"&7IVs: &e{{ivhp}}&7/&e{{ivatk}}&7/&e{{ivdef}}&7/&e{{ivspatk}}&7/&e{{ivspdef}}&7/&e{{ivspeed}}"
 	));
+	public static final ConfigKey<String> ADD_POKEMON = stringKey("ui.selection.actions.add-pokemon.success", "{{daycare_prefix}} &7You've added your &e{{pokemon}} &7to the daycare!");
 
 	// Common Items
 	public static final ConfigKey<String> ITEM_BACK = stringKey("ui.common.common.back.title", "&c\u2190 Go Back \u2190");
@@ -191,15 +191,11 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 
 	// Selection UI
 	public static final ConfigKey<String> SELECT_TITLE = stringKey("ui.selection.title", "&cDaycare &7\u00bb &3{{pokemon}}");
-	public static final ConfigKey<String> SELECT_RETRIEVE_TITLE = stringKey("ui.selection.retrieve.title", "&aRetrieve {{pokemon}}?");
-	public static final ConfigKey<List<String>> SELECT_RETRIEVE_LORE = listKey("ui.selection.retrieve.lore", Lists.newArrayList(
-			"&7Retrieval Cost: &a{{price}}"
-	));
 	public static final ConfigKey<List<String>> SELECT_RETRIEVE_PRICE_CHANGE = listKey("ui.selection.actions.retrieve.price-change", Collections.singletonList(
 			"{{daycare_prefix}} &7The price to to retrieve youor pokemon has changed recently, make sure you are ok with this new price!"
 	));
 	public static final ConfigKey<List<String>> SELECT_RETRIEVE = listKey("ui.selection.actions.retrieve.success", Collections.singletonList(
-			"{{daycare_prefix}} &7You've retrieved your &e{{pokemon}} &7for &a{{price}}&7!"
+			"{{daycare_prefix}} &7You've retrieved your &e{{pokemon}} &7for &a{{daycare_price}}&7!"
 	));
 	public static final ConfigKey<List<String>> SELECT_RETRIEVE_EVOLVED = listKey("ui.selection.actions.retrieve.evolved", Collections.singletonList(
 			"{{daycare_prefix}} &7Whilst you were making your decision, your &e{{pokemon_old}} &7evolved into &e{{pokemon}}&7!"
@@ -208,7 +204,7 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	// Party UI
 	public static final ConfigKey<String> PARTY_TITLE = stringKey("ui.party.title", "&cDaycare &7\u00bb &3Party");
 	public static final ConfigKey<String> PARTY_PC = stringKey("ui.party.common.pc", "&eOpen PC");
-	public static final ConfigKey<String> PARTY_NO_SELECTION = stringKey("ui.party.common.no-selection", "&cPlease Pick a Pokemon");
+	public static final ConfigKey<String> PC_PARTY = stringKey("ui.pc.common.party", "&eOpen Party");
 
 	// PC UI
 	public static final ConfigKey<String> PC_TITLE = stringKey("ui.pc.title", "&cDaycare &7\u00bb &3PC");

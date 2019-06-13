@@ -18,7 +18,7 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 	protected T slot2;
 
 	protected T egg;
-	private BreedStage stage;
+	protected BreedStage stage;
 
 	private boolean unlocked;
 	private LocalDateTime dateUnlocked = LocalDateTime.now();
@@ -66,6 +66,7 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		}
 
 		this.dirty = true;
+		this.stage = null;
 		return wrapper;
 	}
 

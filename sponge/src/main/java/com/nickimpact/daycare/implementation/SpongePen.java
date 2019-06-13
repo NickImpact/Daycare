@@ -28,6 +28,12 @@ public class SpongePen extends Pen<SpongeDaycarePokemonWrapper, Pokemon> {
 		super.addAtSlot(pokemon, slot);
 		if(slot == 1) {
 			this.slot1 = new SpongeDaycarePokemonWrapper(pokemon);
+		} else {
+			this.slot2 = new SpongeDaycarePokemonWrapper(pokemon);
+		}
+
+		if(this.isFull() && this.canBreed()) {
+			this.stage = BreedStage.SETTLING;
 		}
 	}
 

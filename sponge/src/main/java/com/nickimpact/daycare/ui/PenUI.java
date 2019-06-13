@@ -7,6 +7,8 @@ import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.implementation.SpongeDaycarePokemonWrapper;
 import com.nickimpact.daycare.implementation.SpongePen;
 import com.nickimpact.daycare.implementation.SpongeRanch;
+import com.nickimpact.daycare.text.TextParsingUtils;
+import com.nickimpact.daycare.ui.common.CommonUIComponents;
 import com.nickimpact.impactor.api.configuration.ConfigKey;
 import com.nickimpact.impactor.sponge.ui.SpongeIcon;
 import com.nickimpact.impactor.sponge.ui.SpongeLayout;
@@ -78,7 +80,6 @@ public class PenUI {
 		layout.slot(gray, 33);
 
 		BreedStage stage = this.pen.getStage();
-		stage = BreedStage.OUT_ON_THE_TOWN;             // TEMP
 		if(stage != null) {
 			ItemStack notReached = ItemStack.builder()
 					.itemType(ItemTypes.STAINED_GLASS_PANE)
@@ -107,8 +108,18 @@ public class PenUI {
 
 	private SpongeIcon pokemonIconForSlot(int slot) {
 		if(this.pen.getAtPosition(slot).isPresent()) {
-
-			return SpongeIcon.BORDER;
+			TextParsingUtils parser = SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils();
+			Map<String, Object> variables = Maps.newHashMap();
+			variables.put("poke", this.pen.getAtPosition(slot).get().getDelegate());
+			variables.put("wrapper", this.pen.getAtPosition(slot).get());
+			ItemStack display = CommonUIComponents.pokemonDisplay(this.pen.getAtPosition(slot).get().getDelegate());
+			display.offer(Keys.DISPLAY_NAME, parser.fetchAndParseMsg(this.viewer, MsgConfigKeys.POKEMON_TITLE_PEN, null, variables));
+			display.offer(Keys.ITEM_LORE, parser.fetchAndParseMsgs(this.viewer, MsgConfigKeys.POKEMON_LORE_PEN, null, variables));
+			SpongeIcon icon = new SpongeIcon(display);
+			icon.addListener(clickable -> {
+				new RetrievalUI(this.viewer, this.pen.getAtPosition(slot).get(), this.ranch, this.pen, slot).open();
+			});
+			return icon;
 		} else {
 			ItemStack e = ItemStack.builder()
 					.itemType(ItemTypes.BARRIER)
@@ -116,7 +127,7 @@ public class PenUI {
 					.build();
 			SpongeIcon empty = new SpongeIcon(e);
 			empty.addListener(clickable -> {
-
+				new PartyUI(this.viewer, this.ranch, this.pen, slot).open();
 			});
 
 			return empty;

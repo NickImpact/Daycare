@@ -264,7 +264,7 @@ public class SqlImplementation implements StorageImplementation {
 			ps.setNull(1, Types.CLOB);
 		} else {
 			Clob pokemon = connection.createClob();
-			pokemon.setString(1, plugin.getGson().toJson(wrapper));
+			pokemon.setString(1, plugin.getGson().toJson(wrapper, DaycarePokemonWrapper.class));
 			ps.setClob(1, pokemon);
 		}
 		ps.setString(2, pen.toString());

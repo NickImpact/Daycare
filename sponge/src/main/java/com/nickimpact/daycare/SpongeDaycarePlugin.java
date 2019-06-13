@@ -12,6 +12,7 @@ import com.nickimpact.daycare.api.dependencies.classloader.ReflectionClassLoader
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Ranch;
+import com.nickimpact.daycare.api.util.GsonUtils;
 import com.nickimpact.daycare.api.util.PluginInstance;
 import com.nickimpact.daycare.commands.DaycareCmd;
 import com.nickimpact.daycare.common.json.PenAdapter;
@@ -98,6 +99,7 @@ public class SpongeDaycarePlugin extends DaycarePlugin {
 		this.logger = new SpongeLogger(this, fallback);
 		logger.info("Initializing Daycare...");
 		this.service = new SpongeDaycareService();
+		new GsonUtils(this);
 
 		RanchAdapter r = new RanchAdapter(this);
 		PenAdapter p = new PenAdapter(this);

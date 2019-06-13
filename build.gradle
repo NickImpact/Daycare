@@ -23,7 +23,7 @@ version '2.0.0'
 group 'com.nickimpact.daycare'
 
 ext {
-    pluginversion = '1.3.1'
+    pluginversion = '2.0.0'
     spongeapiversion = '7.1.0'
     completeversion = "Reforged-7.0.6-S${spongeapiversion}-${pluginversion}"
 }
@@ -90,7 +90,7 @@ subprojects {
     }
 
     ext {
-        pluginversion = '1.3.1'
+        pluginversion = '2.0.0'
         spongeapiversion = '7.1.0'
         reforged = "Reforged-7.0.6-S${spongeapiversion}-${pluginversion}"
         generatiosn = "Generations-2.6.2-S${spongeapiversion}-${pluginversion}"
