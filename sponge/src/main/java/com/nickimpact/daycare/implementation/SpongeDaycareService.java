@@ -37,7 +37,7 @@ public class SpongeDaycareService implements DaycareService {
 
 	@Override
 	public void setActiveModule(String key) {
-		this.module = this.unlockers.get(key);
+		this.module = getUnlockModules().getOrDefault(key, getUnlockModules().get("economic"));
 	}
 
 	@Override

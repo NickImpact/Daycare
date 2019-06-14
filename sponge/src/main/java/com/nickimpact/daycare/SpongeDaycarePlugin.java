@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.nickimpact.daycare.api.dependencies.DependencyManager;
 import com.nickimpact.daycare.api.dependencies.classloader.PluginClassLoader;
 import com.nickimpact.daycare.api.util.PluginInstance;
+import com.nickimpact.daycare.common.DaycarePluginInfo;
 import com.nickimpact.daycare.common.plugin.DaycarePlugin;
 import com.nickimpact.daycare.text.DaycareTokens;
 import com.nickimpact.daycare.text.TextParsingUtils;
@@ -91,27 +92,7 @@ public abstract class SpongeDaycarePlugin extends DaycarePlugin {
 
 	@Override
 	public PluginInfo getPluginInfo() {
-		return new PluginInfo() {
-			@Override
-			public String getID() {
-				return "daycare";
-			}
-
-			@Override
-			public String getName() {
-				return "Daycare";
-			}
-
-			@Override
-			public String getVersion() {
-				return "2.0.0";
-			}
-
-			@Override
-			public String getDescription() {
-				return "The pokemon daycare";
-			}
-		};
+		return new DaycarePluginInfo();
 	}
 
 	@Override

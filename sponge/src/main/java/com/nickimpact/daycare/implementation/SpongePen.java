@@ -22,9 +22,4 @@ public abstract class SpongePen<T extends DaycarePokemonWrapper<?>, E> extends P
 	public static PenBuilder builder() {
 		return SpongeDaycarePlugin.getSpongeInstance().getService().getBuilderRegistry().createFor(PenBuilder.class);
 	}
-
-	public interface SpongePenBulder extends PenBuilder {
-
-
-	}
 }

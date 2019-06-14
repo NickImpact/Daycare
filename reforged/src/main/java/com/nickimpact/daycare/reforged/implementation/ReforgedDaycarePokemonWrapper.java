@@ -47,14 +47,6 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 		return pokemon.writeToNBT(new NBTTagCompound());
 	}
 
-	private static final BiPredicate<Pokemon, List<EvoCondition>> evoConditionCheck = (pokemon, conditions) -> conditions.stream().allMatch(condition -> {
-		if (condition instanceof EvolutionPatch) {
-			return ((EvolutionPatch) condition).passes(pokemon);
-		}
-
-		return false;
-	});
-
 	public void createEgg(Ranch ranch, Pen pen) {
 		ReforgedDaycarePokemonWrapper p1 = (ReforgedDaycarePokemonWrapper) pen.getAtPosition(1).get();
 		ReforgedDaycarePokemonWrapper p2 = (ReforgedDaycarePokemonWrapper) pen.getAtPosition(2).get();
@@ -110,6 +102,14 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 			}
 		}
 	}
+
+	private static final BiPredicate<Pokemon, List<EvoCondition>> evoConditionCheck = (pokemon, conditions) -> conditions.stream().allMatch(condition -> {
+		if (condition instanceof EvolutionPatch) {
+			return ((EvolutionPatch) condition).passes(pokemon);
+		}
+
+		return false;
+	});
 
 	@Override
 	public boolean evolve(Ranch ranch, Pen pen) {
