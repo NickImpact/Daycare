@@ -2,10 +2,8 @@ package com.nickimpact.daycare.text;
 
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.SpongeDaycarePlugin;
-import com.nickimpact.daycare.pixelmon.EnumPokemonFields;
 import com.nickimpact.impactor.api.configuration.Config;
 import com.nickimpact.impactor.api.configuration.ConfigKey;
-import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import io.github.nucleuspowered.nucleus.api.NucleusAPI;
 import io.github.nucleuspowered.nucleus.api.exceptions.NucleusException;
 import io.github.nucleuspowered.nucleus.api.text.NucleusTextTemplate;

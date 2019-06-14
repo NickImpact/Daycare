@@ -4,4 +4,5 @@ include 'common'
 include 'sponge'
 include 'spigot'
 include 'generations'
+include 'reforged'
 

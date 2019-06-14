@@ -1,7 +1,6 @@
-package com.nickimpact.daycare.pixelmon;
+package com.nickimpact.daycare.reforged.pokemon;
 
 import com.google.common.collect.Maps;
-import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.implementation.SpongeDaycarePokemonWrapper;
 import com.nickimpact.daycare.text.TokenHolder;
 import com.nickimpact.daycare.text.Translator;

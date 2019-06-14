@@ -93,7 +93,7 @@ subprojects {
         pluginversion = '2.0.0'
         spongeapiversion = '7.1.0'
         reforged = "Reforged-7.0.6-S${spongeapiversion}-${pluginversion}"
-        generatiosn = "Generations-2.6.2-S${spongeapiversion}-${pluginversion}"
+        generations = "Generations-2.6.2-S${spongeapiversion}-${pluginversion}"
     }
 
     repositories {
@@ -159,6 +159,7 @@ task copyJars(type: Copy) {
     exclude 'sponge*.jar'
     exclude 'plugin*.jar'
     exclude 'reforged*.jar'
+    exclude 'generations.jar'
 }
 
 build.dependsOn shadowJar

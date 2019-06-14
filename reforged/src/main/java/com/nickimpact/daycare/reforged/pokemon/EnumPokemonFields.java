@@ -1,4 +1,4 @@
-package com.nickimpact.daycare.pixelmon;
+package com.nickimpact.daycare.reforged.pokemon;
 
 import com.nickimpact.daycare.SpongeDaycarePlugin;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;

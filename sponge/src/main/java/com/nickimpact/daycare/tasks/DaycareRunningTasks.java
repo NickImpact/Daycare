@@ -18,7 +18,7 @@ import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Moveset;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.evolution.conditions.EvoCondition;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.evolution.types.LevelingEvolution;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
-import gg.psyduck.pmixins.api.EvolutionPatch;
+//import gg.psyduck.pmixins.api.EvolutionPatch;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.scheduler.Task;
@@ -132,9 +132,9 @@ public class DaycareRunningTasks {
 	}
 
 	private static final BiPredicate<Pokemon, List<EvoCondition>> evoConditionCheck = (pokemon, conditions) -> conditions.stream().allMatch(condition -> {
-		if (condition instanceof EvolutionPatch) {
-			return ((EvolutionPatch) condition).passes(pokemon);
-		}
+//		if (condition instanceof EvolutionPatch) {
+//			return ((EvolutionPatch) condition).passes(pokemon);
+//		}
 
 		return false;
 	});
