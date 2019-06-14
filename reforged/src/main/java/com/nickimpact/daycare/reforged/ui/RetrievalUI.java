@@ -1,12 +1,12 @@
-package com.nickimpact.daycare.ui;
+package com.nickimpact.daycare.reforged.ui;
 
 import com.google.common.collect.Maps;
 import com.nickimpact.daycare.SpongeDaycarePlugin;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
-import com.nickimpact.daycare.implementation.SpongeDaycarePokemonWrapper;
-import com.nickimpact.daycare.implementation.SpongePen;
 import com.nickimpact.daycare.implementation.SpongeRanch;
+import com.nickimpact.daycare.reforged.implementation.ReforgedDaycarePokemonWrapper;
+import com.nickimpact.daycare.reforged.implementation.ReforgedPen;
 import com.nickimpact.daycare.text.TextParsingUtils;
 import com.nickimpact.daycare.ui.common.CommonUIComponents;
 import com.nickimpact.impactor.api.configuration.Config;
@@ -30,13 +30,13 @@ public class RetrievalUI {
 
     private SpongeUI display;
     private Player viewer;
-    private SpongeDaycarePokemonWrapper pokemon;
+    private ReforgedDaycarePokemonWrapper pokemon;
 
     private SpongeRanch ranch;
-    private SpongePen pen;
+    private ReforgedPen pen;
     private int slot;
 
-    public RetrievalUI(Player viewer, SpongeDaycarePokemonWrapper pokemon, SpongeRanch ranch, SpongePen pen, int slot) {
+    public RetrievalUI(Player viewer, ReforgedDaycarePokemonWrapper pokemon, SpongeRanch ranch, ReforgedPen pen, int slot) {
         this.viewer = viewer;
         this.pokemon = pokemon;
         this.display = this.createDisplay();
@@ -78,7 +78,6 @@ public class RetrievalUI {
             return Optional.of(Text.of(SpongeDaycarePlugin.getSpongeInstance().getEconomy().getDefaultCurrency().format(new BigDecimal(amount))));
         });
 
-
         SpongeIcon pokemon = new SpongeIcon(CommonUIComponents.pokemonDisplay(this.pokemon.getDelegate()));
         pokemon.getDisplay().offer(Keys.DISPLAY_NAME, parser.fetchAndParseMsg(this.viewer, MsgConfigKeys.POKEMON_TITLE_PEN, tokens, variables));
 
@@ -96,7 +95,7 @@ public class RetrievalUI {
                             player.sendMessages(parser.fetchAndParseMsgs(player, MsgConfigKeys.SELECT_RETRIEVE, tokens, variables));
                         }
                 ),
-                (player, event) -> new PenUI(player, this.ranch, this.pen).open()
+                (player, event) -> new ReforgedPenUI(player, this.ranch, this.pen).open()
         );
     }
 }

@@ -16,7 +16,6 @@ import com.nickimpact.daycare.common.json.PokemonWrapperAdapter;
 import com.nickimpact.daycare.common.json.RanchAdapter;
 import com.nickimpact.daycare.common.storage.StorageFactory;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
-import com.nickimpact.daycare.implementation.SpongeDaycarePokemonWrapper;
 import com.nickimpact.daycare.implementation.SpongeDaycareService;
 import com.nickimpact.daycare.implementation.SpongePen;
 import com.nickimpact.daycare.implementation.SpongeRanch;
@@ -30,6 +29,7 @@ import com.nickimpact.impactor.sponge.configuration.SpongeConfig;
 import com.nickimpact.impactor.sponge.configuration.SpongeConfigAdapter;
 import com.nickimpact.impactor.sponge.logging.SpongeLogger;
 import io.github.nucleuspowered.nucleus.api.service.NucleusMessageTokenService;
+import lombok.Getter;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.service.ChangeServiceProviderEvent;
 import org.spongepowered.api.service.economy.EconomyService;
@@ -45,6 +45,9 @@ public class PluginBootstrap {
         this.plugin = plugin;
     }
 
+    @Getter
+    private GsonBuilder builder = new GsonBuilder().setPrettyPrinting();
+
     public void preInit() {
         this.plugin.setLogger(new SpongeLogger(this.plugin, this.plugin.fallback));
         this.plugin.getPluginLogger().info("Initializing Daycare...");
@@ -53,31 +56,26 @@ public class PluginBootstrap {
 
         RanchAdapter r = new RanchAdapter(this.plugin);
         PenAdapter p = new PenAdapter(this.plugin);
-        PokemonWrapperAdapter pwa = new PokemonWrapperAdapter(this.plugin);
 
-        this.plugin.setGson(new GsonBuilder().setPrettyPrinting()
-                .registerTypeAdapter(Ranch.class, r)
-                .registerTypeAdapter(Pen.class, p)
-                .registerTypeAdapter(DaycarePokemonWrapper.class, pwa)
-                .create());
+        builder.registerTypeAdapter(Ranch.class, r)
+                .registerTypeAdapter(Pen.class, p);
 
         try {
             r.getRegistry().register(SpongeRanch.class);
             p.getRegistry().register(SpongePen.class);
-            pwa.getRegistry().register(SpongeDaycarePokemonWrapper.class);
         } catch (Exception e) {
             this.plugin.getPluginLogger().error("Unable to register class typings into API Service...");
         }
 
         this.plugin.getService().registerUnlocker("economic", new EconomicModule());
         this.plugin.getService().getBuilderRegistry().register(Ranch.RanchBuilder.class, SpongeRanch.SpongeRanchBuilder.class);
-        this.plugin.getService().getBuilderRegistry().register(Pen.PenBuilder.class, SpongePen.SpongePenBuilder.class);
 
         this.plugin.getPluginLogger().info("Registering tokens with Nucleus...");
         this.plugin.setTokens(new DaycareTokens(this.plugin));
     }
 
     public void init() {
+        this.plugin.setGson(builder.create());
         this.plugin.getPluginLogger().info("Loading configuration...");
         this.plugin.setConfig(new SpongeConfig(new SpongeConfigAdapter(this.plugin, new File(this.plugin.getConfigDir().toFile(), "daycare.conf")), new ConfigKeys()));
         this.plugin.setMsgConfig(new SpongeConfig(new SpongeConfigAdapter(this.plugin, new File(this.plugin.getConfigDir().toFile(), "lang/en_us.conf")), new MsgConfigKeys()));
@@ -98,7 +96,7 @@ public class PluginBootstrap {
 
         this.plugin.getCmdManager().registerCommand(new DaycareCmd());
 
-        Sponge.getEventManager().registerListeners(this, new JoinListener());
+        Sponge.getEventManager().registerListeners(this.plugin, new JoinListener());
 
         this.plugin.getLogger().info("Initializing and reading storage...");
         ((SpongeDaycareService) this.plugin.getService()).setStorage(new StorageFactory(this.plugin).getInstance(StorageType.JSON));

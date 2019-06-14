@@ -1,13 +1,10 @@
 package com.nickimpact.daycare.generations.pokemon;
 
 import com.google.common.collect.Maps;
-import com.nickimpact.daycare.implementation.SpongeDaycarePokemonWrapper;
 import com.nickimpact.daycare.text.TokenHolder;
 import com.nickimpact.daycare.text.Translator;
-import org.spongepowered.api.text.Text;
 
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * (Some note will appear here)

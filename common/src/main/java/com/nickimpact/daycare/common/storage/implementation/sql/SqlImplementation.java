@@ -218,7 +218,7 @@ public class SqlImplementation implements StorageImplementation {
 				PreparedStatement egg = connection.prepareStatement(processor.apply(UPDATE_PEN_EGG));
 				if(pen.getEgg().isPresent()) {
 					Clob e = connection.createClob();
-					e.setString(1, plugin.getGson().toJson(pen.getEgg().get()));
+					e.setString(1, plugin.getGson().toJson(pen.getEgg().get(), DaycarePokemonWrapper.class));
 					egg.setClob(1, e);
 				} else {
 					egg.setNull(1, Types.CLOB);

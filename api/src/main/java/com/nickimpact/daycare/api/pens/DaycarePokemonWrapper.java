@@ -60,4 +60,12 @@ public abstract class DaycarePokemonWrapper<T> {
 	public void clean() {
 		this.dirty = false;
 	}
+
+	public abstract void createEgg(Ranch ranch, Pen pen);
+
+	public abstract void tryLevelUp(Ranch ranch, Pen pen);
+
+	public abstract boolean evolve(Ranch ranch, Pen pen);
+
+	public abstract boolean learnMove(Ranch ranch, Pen pen);
 }

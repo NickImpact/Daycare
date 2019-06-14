@@ -2,6 +2,7 @@ package com.nickimpact.daycare.api.pens;
 
 
 import com.nickimpact.daycare.api.breeding.BreedStage;
+import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.api.util.PluginInstance;
 import com.nickimpact.impactor.api.building.Builder;
 
@@ -28,14 +29,15 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 	private transient boolean dirty;
 
 	// Time tracking settings
-	private int time;
+	private long time;
+	private double chance;
 
 	public Pen(int id) {
 		this.identifier = UUID.randomUUID();
 		this.id = id;
 	}
 
-	protected Pen(UUID identifier, int id, T slot1, T slot2, T egg, boolean unlocked, LocalDateTime dateUnlocked, Settings settings, BreedStage stage) {
+	public Pen(UUID identifier, int id, T slot1, T slot2, T egg, boolean unlocked, LocalDateTime dateUnlocked, Settings settings, BreedStage stage) {
 		this.identifier = identifier;
 		this.id = id;
 		this.slot1 = slot1;
@@ -104,13 +106,35 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		return this.settings;
 	}
 
-	public int getSecondsElapsedSinceLastEgg() {
+	public long getSecondsElapsedSinceLastEgg() {
 		return this.time;
 	}
 
 	public void incrementTimeElapsed() {
 		++time;
 		this.dirty = true;
+	}
+
+	public void pushTimeToIncrement() {
+		long increment = PluginInstance.getPlugin().getConfiguration().get(ConfigKeys.BREEDING_MAX_WAIT) / 5;
+		this.time = increment * (this.stage == null ? 0 : this.stage.ordinal());
+	}
+
+	public void resetEggTimer() {
+		this.time = 0;
+	}
+
+	public double getChance() {
+		return this.chance;
+	}
+
+	public void incrementEggChance() {
+		this.chance += PluginInstance.getPlugin().getConfiguration().get(ConfigKeys.BREEDING_STAGE_ADVANCE_INCREMENT);
+		this.dirty = true;
+	}
+
+	public void resetEggChance() {
+		this.chance = 0;
 	}
 
 	public UUID getIdentifier() {
@@ -137,11 +161,19 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		return this.stage;
 	}
 
-	public void advanceBreeding() {
+	public boolean advanceBreeding() {
+		if(this.stage == null) {
+			this.stage = BreedStage.SETTLING;
+			return false;
+		}
+
 		this.stage = BreedStage.values()[this.stage.ordinal() + 1];
 		if(this.stage == BreedStage.BRED) {
-			this.stage = BreedStage.SETTLING;
+			this.stage = null;
+			return true;
 		}
+
+		return false;
 	}
 
 	public static PenBuilder builder() {

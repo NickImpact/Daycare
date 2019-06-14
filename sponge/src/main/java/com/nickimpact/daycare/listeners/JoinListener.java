@@ -1,17 +1,13 @@
 package com.nickimpact.daycare.listeners;
 
 import com.nickimpact.daycare.SpongeDaycarePlugin;
-import com.nickimpact.daycare.api.pens.Ranch;
+import com.nickimpact.daycare.api.DaycareService;
 import com.nickimpact.daycare.api.util.PluginInstance;
 import com.nickimpact.daycare.implementation.SpongeRanch;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 
 public class JoinListener {
 
@@ -25,6 +21,15 @@ public class JoinListener {
 			} else {
 				SpongeDaycarePlugin.getSpongeInstance().getService().getRanchManager().addRanch(ranch.get());
 			}
+		});
+	}
+
+	@Listener
+	public void onLeave(ClientConnectionEvent.Disconnect e, @First Player player) {
+		DaycareService service = PluginInstance.getPlugin().getService();
+		service.getRanchManager().getRanch(player.getUniqueId()).ifPresent(ranch -> {
+			service.getStorage().updateRanch(ranch);
+			service.getRanchManager().getLoadedRanches().removeIf(r -> r.getIdentifier().equals(ranch.getIdentifier()));
 		});
 	}
 }

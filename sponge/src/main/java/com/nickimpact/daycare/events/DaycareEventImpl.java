@@ -3,9 +3,7 @@ package com.nickimpact.daycare.events;
 import com.nickimpact.daycare.api.events.DaycareEvent;
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.api.pens.Pen;
-import com.nickimpact.daycare.implementation.SpongeDaycarePokemonWrapper;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
-import com.pixelmonmod.pixelmon.battles.attacks.Attack;
 import com.pixelmonmod.pixelmon.battles.attacks.AttackBase;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import org.spongepowered.api.Sponge;
@@ -53,44 +51,44 @@ public class DaycareEventImpl implements DaycareEvent, Event, Cancellable {
 		return Sponge.getCauseStackManager().getCurrentCause();
 	}
 
-	public static class AddPokemon extends DaycareEventImpl implements DaycareEvent.AddPokemon<Pokemon> {
+	public static class AddPokemon extends DaycareEventImpl implements DaycareEvent.AddPokemon<DaycarePokemonWrapper> {
 
-		private Pokemon pokemon;
+		private DaycarePokemonWrapper pokemon;
 
-		public AddPokemon(UUID uuid, Pen pen, Pokemon pokemon) {
+		public AddPokemon(UUID uuid, Pen pen, DaycarePokemonWrapper pokemon) {
 			super(uuid, pen);
 			this.pokemon = pokemon;
 		}
 
 		@Override
-		public Pokemon getPokemon() {
+		public DaycarePokemonWrapper getPokemon() {
 			return pokemon;
 		}
 	}
 
-	public static class RemovePokemon extends DaycareEventImpl implements DaycareEvent.RemovePokemon<Pokemon> {
+	public static class RemovePokemon extends DaycareEventImpl implements DaycareEvent.RemovePokemon<DaycarePokemonWrapper> {
 
-		private Pokemon pokemon;
+		private DaycarePokemonWrapper pokemon;
 
-		public RemovePokemon(UUID uuid, Pen pen, Pokemon pokemon) {
+		public RemovePokemon(UUID uuid, Pen pen, DaycarePokemonWrapper pokemon) {
 			super(uuid, pen);
 			this.pokemon = pokemon;
 		}
 
 		@Override
-		public Pokemon getRemovedPokemon() {
+		public DaycarePokemonWrapper getRemovedPokemon() {
 			return this.pokemon;
 		}
 
 	}
 
-	public static class Breed extends DaycareEventImpl implements DaycareEvent.Breed<Pokemon> {
+	public static class Breed extends DaycareEventImpl implements DaycareEvent.Breed<DaycarePokemonWrapper> {
 
-		private Pokemon male;
-		private Pokemon female;
-		private Pokemon egg;
+		private DaycarePokemonWrapper male;
+		private DaycarePokemonWrapper female;
+		private DaycarePokemonWrapper egg;
 
-		public Breed(UUID uuid, Pen pen, Pokemon male, Pokemon female, Pokemon egg) {
+		public Breed(UUID uuid, Pen pen, DaycarePokemonWrapper male, DaycarePokemonWrapper female, DaycarePokemonWrapper egg) {
 			super(uuid, pen);
 			this.male = male;
 			this.female = female;
@@ -98,56 +96,56 @@ public class DaycareEventImpl implements DaycareEvent, Event, Cancellable {
 		}
 
 		@Override
-		public Pokemon getMaleParent() {
+		public DaycarePokemonWrapper getMaleParent() {
 			return this.male;
 		}
 
 		@Override
-		public Pokemon getFemaleParent() {
+		public DaycarePokemonWrapper getFemaleParent() {
 			return this.female;
 		}
 
 		@Override
-		public Pokemon getEgg() {
+		public DaycarePokemonWrapper getEgg() {
 			return this.egg;
 		}
 
 		@Override
-		public void setTarget(Pokemon pokemon) {
-			this.egg = pokemon.isEgg() ? pokemon : pokemon.makeEgg();
+		public void setTarget(DaycarePokemonWrapper pokemon) {
+			this.egg = pokemon;
 		}
 	}
 
-	public static class CollectEgg extends DaycareEventImpl implements DaycareEvent.CollectEgg<Pokemon> {
+	public static class CollectEgg extends DaycareEventImpl implements DaycareEvent.CollectEgg<DaycarePokemonWrapper> {
 
-		private Pokemon egg;
+		private DaycarePokemonWrapper egg;
 
-		public CollectEgg(UUID uuid, Pen pen, Pokemon egg) {
+		public CollectEgg(UUID uuid, Pen pen, DaycarePokemonWrapper egg) {
 			super(uuid, pen);
 			this.egg = egg;
 		}
 
-		public Pokemon getEgg() {
+		public DaycarePokemonWrapper getEgg() {
 			return this.egg;
 		}
 
 	}
 
-	public static class LevelUp extends DaycareEventImpl implements DaycareEvent.LevelUp<Pokemon> {
+	public static class LevelUp extends DaycareEventImpl implements DaycareEvent.LevelUp<DaycarePokemonWrapper> {
 
-		private Pokemon pokemon;
+		private DaycarePokemonWrapper pokemon;
 		private int level;
 		private int gained;
 
-		public LevelUp(UUID uuid, Pen pen, SpongeDaycarePokemonWrapper wrapper, int level) {
+		public LevelUp(UUID uuid, Pen pen, DaycarePokemonWrapper wrapper, int level) {
 			super(uuid, pen);
-			this.pokemon = wrapper.getDelegate();
+			this.pokemon = wrapper;
 			this.level = level;
 			this.gained = wrapper.getGainedLevels();
 		}
 
 		@Override
-		public Pokemon getPokemon() {
+		public DaycarePokemonWrapper getPokemon() {
 			return this.pokemon;
 		}
 
@@ -162,17 +160,17 @@ public class DaycareEventImpl implements DaycareEvent, Event, Cancellable {
 		}
 	}
 
-	public static class LearnMove extends DaycareEventImpl implements DaycareEvent.LearnMove<Pokemon, AttackBase> {
+	public static class LearnMove extends DaycareEventImpl implements DaycareEvent.LearnMove<DaycarePokemonWrapper, AttackBase> {
 
-		private Pokemon learner;
+		private DaycarePokemonWrapper learner;
 		private AttackBase learned;
 		private AttackBase forgot;
 
-		public LearnMove(UUID uuid, Pen pen, Pokemon learner, AttackBase learned) {
+		public LearnMove(UUID uuid, Pen pen, DaycarePokemonWrapper learner, AttackBase learned) {
 			this(uuid, pen, learner, learned, null);
 		}
 
-		public LearnMove(UUID uuid, Pen pen, Pokemon learner, AttackBase learned, AttackBase forgot) {
+		public LearnMove(UUID uuid, Pen pen, DaycarePokemonWrapper learner, AttackBase learned, AttackBase forgot) {
 			super(uuid, pen);
 			this.learner = learner;
 			this.learned = learned;
@@ -181,7 +179,7 @@ public class DaycareEventImpl implements DaycareEvent, Event, Cancellable {
 
 
 		@Override
-		public Pokemon getLearner() {
+		public DaycarePokemonWrapper getLearner() {
 			return this.learner;
 		}
 
@@ -197,19 +195,19 @@ public class DaycareEventImpl implements DaycareEvent, Event, Cancellable {
 
 	}
 
-	public static class Evolve extends DaycareEventImpl implements DaycareEvent.Evolve<Pokemon, EnumSpecies> {
+	public static class Evolve extends DaycareEventImpl implements DaycareEvent.Evolve<DaycarePokemonWrapper, EnumSpecies> {
 
-		private Pokemon evolving;
+		private DaycarePokemonWrapper evolving;
 		private EnumSpecies to;
 
-		public Evolve(UUID uuid, Pen pen, Pokemon evolving, EnumSpecies to) {
+		public Evolve(UUID uuid, Pen pen, DaycarePokemonWrapper evolving, EnumSpecies to) {
 			super(uuid, pen);
 			this.evolving = evolving;
 			this.to = to;
 		}
 
 		@Override
-		public Pokemon getPokemonEvolving() {
+		public DaycarePokemonWrapper getPokemonEvolving() {
 			return this.evolving;
 		}
 

@@ -1,7 +1,7 @@
 package com.nickimpact.daycare.reforged.pokemon;
 
 import com.google.common.collect.Maps;
-import com.nickimpact.daycare.implementation.SpongeDaycarePokemonWrapper;
+import com.nickimpact.daycare.reforged.implementation.ReforgedDaycarePokemonWrapper;
 import com.nickimpact.daycare.text.TokenHolder;
 import com.nickimpact.daycare.text.Translator;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
@@ -70,7 +70,7 @@ public class PokemonTokens implements TokenHolder {
 			return Optional.empty();
 		});
 		tokens.put("gained_lvls", (p, v, m) -> {
-			SpongeDaycarePokemonWrapper pokemon = getWrapperFromVariableIfExists(m);
+			ReforgedDaycarePokemonWrapper pokemon = getWrapperFromVariableIfExists(m);
 			if (pokemon == null) {
 				return Optional.empty();
 			}
@@ -78,7 +78,7 @@ public class PokemonTokens implements TokenHolder {
 			return Optional.of(Text.of("+", pokemon.getGainedLevels()));
 		});
 		tokens.put("calced_lvl", (p, v, m) -> {
-			SpongeDaycarePokemonWrapper pokemon = getWrapperFromVariableIfExists(m);
+			ReforgedDaycarePokemonWrapper pokemon = getWrapperFromVariableIfExists(m);
 			if (pokemon == null) {
 				return Optional.empty();
 			}
@@ -94,7 +94,7 @@ public class PokemonTokens implements TokenHolder {
 
 	private static Pokemon getPokemonFromVariableIfExists(Map<String, Object> m) {
 		return m.values().stream().filter(val -> val instanceof Pokemon).map(val -> (Pokemon) val).findAny().orElseGet(() -> {
-			SpongeDaycarePokemonWrapper wrapper = getWrapperFromVariableIfExists(m);
+			ReforgedDaycarePokemonWrapper wrapper = getWrapperFromVariableIfExists(m);
 			if (wrapper != null) {
 				return wrapper.getDelegate();
 			}
@@ -102,8 +102,8 @@ public class PokemonTokens implements TokenHolder {
 		});
 	}
 
-	private static SpongeDaycarePokemonWrapper getWrapperFromVariableIfExists(Map<String, Object> m) {
-		return m.values().stream().filter(val -> val instanceof SpongeDaycarePokemonWrapper).map(val -> (SpongeDaycarePokemonWrapper) val).findAny().orElse(null);
+	private static ReforgedDaycarePokemonWrapper getWrapperFromVariableIfExists(Map<String, Object> m) {
+		return m.values().stream().filter(val -> val instanceof ReforgedDaycarePokemonWrapper).map(val -> (ReforgedDaycarePokemonWrapper) val).findAny().orElse(null);
 	}
 
 	private static Text getPokemonInfo(Pokemon pokemon, EnumPokemonFields field) {

@@ -22,7 +22,7 @@ public class SpongeRanch extends Ranch<SpongePen> {
 
 	@Override
 	public SpongePen newPen(int id) {
-		return new SpongePen(id);
+		return (SpongePen) SpongePen.builder().id(id).build();
 	}
 
 	public static class SpongeRanchBuilder implements RanchBuilder {

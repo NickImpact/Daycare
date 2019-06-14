@@ -1,10 +1,11 @@
-package com.nickimpact.daycare.ui;
+package com.nickimpact.daycare.reforged.ui;
 
 import com.google.common.collect.Maps;
 import com.nickimpact.daycare.SpongeDaycarePlugin;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.implementation.SpongePen;
 import com.nickimpact.daycare.implementation.SpongeRanch;
+import com.nickimpact.daycare.reforged.implementation.ReforgedPen;
 import com.nickimpact.daycare.ui.common.CommonUIComponents;
 import com.nickimpact.daycare.utils.SpongeItemTypeUtil;
 import com.nickimpact.impactor.sponge.ui.SpongeIcon;
@@ -30,12 +31,12 @@ public class PartyUI {
 	private Player viewer;
 
 	private SpongeRanch ranch;
-	private SpongePen pen;
+	private ReforgedPen pen;
 	private int slot;
 
 	private PlayerPartyStorage party;
 
-	public PartyUI(Player viewer, SpongeRanch ranch, SpongePen pen, int slot) {
+	public PartyUI(Player viewer, SpongeRanch ranch, ReforgedPen pen, int slot) {
 		this.viewer = viewer;
 		this.ranch = ranch;
 		this.pen = pen;

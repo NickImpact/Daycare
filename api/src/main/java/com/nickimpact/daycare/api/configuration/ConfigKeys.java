@@ -67,9 +67,10 @@ public class ConfigKeys implements ConfigKeyHolder {
 	public static final ConfigKey<Integer> LVL_TASK_TIME = intKey("leveling.task-run", 60);
 	public static final ConfigKey<Double> PRICE_PER_LVL = doubleKey("leveling.price-per-level", 100.0);
 
-	public static final ConfigKey<Long> MIN_EGG_WAIT = longKey("breeding.min-wait-seconds", 900);
-	public static final ConfigKey<Long> MAX_EGG_WAIT = longKey("breeding.max-wait-seconds", 3600);
-	public static final ConfigKey<Integer> EGG_CHANCE = intKey("breeding.chance-to-create-egg", 10);
+	public static final ConfigKey<Long> BREEDING_MAX_WAIT = longKey("breeding.timings.max-wait-in-seconds", 3600);
+	public static final ConfigKey<Long> BREEDING_STAGE_ADVANCE_ATTEMPT_INTERVAL = longKey("breeding.timings.stage-advance-attempt", 60);
+	public static final ConfigKey<Double> BREEDING_STAGE_ADVANCE_CHANCE = doubleKey("breeding.chances.stage-advance", 15.0);
+	public static final ConfigKey<Double> BREEDING_STAGE_ADVANCE_INCREMENT = doubleKey("breeding.chances.stage-advance-chance-increment", 5.0);
 
 	public static final ConfigKey<Boolean> LEVELING_ENABLED = booleanKey("leveling.enabled", true);
 	public static final ConfigKey<Boolean> BREEDING_ENABLED = booleanKey("breeding.enabled", true);

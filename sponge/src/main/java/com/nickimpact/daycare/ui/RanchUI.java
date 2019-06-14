@@ -3,6 +3,7 @@ package com.nickimpact.daycare.ui;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.nickimpact.daycare.SpongeDaycarePlugin;
+import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.api.pens.PenUnlockModule;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.implementation.SpongePen;
@@ -99,12 +100,10 @@ public class RanchUI {
 
 			SpongeIcon icon = new SpongeIcon(display);
 			icon.addListener(clickable -> {
-				new PenUI(this.viewer, this.ranch, pen).open();
+				PenUI.builder().ranch(ranch).pen(pen).viewer(viewer).build().open();
 			});
 			return icon;
 		} else {
-			PenUnlockModule module = SpongeDaycarePlugin.getSpongeInstance().getService().getActiveModule();
-
 			List<Text> lore = Lists.newArrayList();
 			lore.addAll(parser.fetchAndParseMsgs(this.viewer, MsgConfigKeys.RANCH_UI_PEN_LOCKED, tokens, variables));
 			lore.add(Text.of(parser.fetchAndParseMsg(this.viewer, MsgConfigKeys.RANCH_PRICE_TAG, tokens, variables)));
@@ -129,7 +128,7 @@ public class RanchUI {
 		if (pen.getAtPosition(slot).isPresent()) {
 			Map<String, Object> variables = Maps.newHashMap();
 			variables.put("wrapper", pen.getAtPosition(slot).orElse(null));
-			variables.put("pokemon", pen.getAtPosition(slot).get().getDelegate());
+			variables.put("pokemon", ((DaycarePokemonWrapper) pen.getAtPosition(slot).get()).getDelegate());
 
 			return parser.fetchAndParseMsg(this.viewer, MsgConfigKeys.RANCH_UI_PEN_INFO, tokens, variables);
 		} else {

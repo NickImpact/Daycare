@@ -1,11 +1,11 @@
-package com.nickimpact.daycare.ui;
+package com.nickimpact.daycare.reforged.ui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.nickimpact.daycare.SpongeDaycarePlugin;
 import com.nickimpact.daycare.configuration.MsgConfigKeys;
-import com.nickimpact.daycare.implementation.SpongePen;
 import com.nickimpact.daycare.implementation.SpongeRanch;
+import com.nickimpact.daycare.reforged.implementation.ReforgedPen;
 import com.nickimpact.daycare.ui.common.CommonUIComponents;
 import com.nickimpact.daycare.utils.SpongeItemTypeUtil;
 import com.nickimpact.impactor.sponge.ui.SpongeIcon;
@@ -35,12 +35,12 @@ public class PcUI {
 	private Player viewer;
 
 	private SpongeRanch ranch;
-	private SpongePen pen;
+	private ReforgedPen pen;
 	private int slot;
 
 	private PCStorage pc;
 
-	public PcUI(Player viewer, SpongeRanch ranch, SpongePen pen, int slot) {
+	public PcUI(Player viewer, SpongeRanch ranch, ReforgedPen pen, int slot) {
 		this.viewer = viewer;
 		this.ranch = ranch;
 		this.pen = pen;
@@ -76,7 +76,7 @@ public class PcUI {
 					SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(this.ranch);
 					this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.ADD_POKEMON, tokens, variables));
 
-					new PenUI(this.viewer, this.ranch, this.pen).open();
+					new ReforgedPenUI(this.viewer, this.ranch, this.pen).open();
 				});
 
 				return icon;
