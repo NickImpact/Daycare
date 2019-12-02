@@ -1,5 +1,6 @@
 package com.nickimpact.daycare.api;
 
+import com.nickimpact.daycare.api.manager.NPCManager;
 import com.nickimpact.daycare.api.manager.RanchManager;
 import com.nickimpact.daycare.api.pens.PenUnlockModule;
 import com.nickimpact.daycare.api.storage.IDaycareStorage;
@@ -12,6 +13,8 @@ public interface DaycareService {
 	IDaycareStorage getStorage();
 
 	RanchManager getRanchManager();
+
+	NPCManager getNPCManager();
 
 	PenUnlockModule getActiveModule();
 

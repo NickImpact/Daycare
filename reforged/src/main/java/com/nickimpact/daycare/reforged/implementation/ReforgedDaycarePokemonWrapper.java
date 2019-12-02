@@ -1,15 +1,15 @@
 package com.nickimpact.daycare.reforged.implementation;
 
 import com.google.common.collect.Maps;
-import com.nickimpact.daycare.SpongeDaycarePlugin;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Ranch;
 import com.nickimpact.daycare.api.util.GsonUtils;
-import com.nickimpact.daycare.configuration.MsgConfigKeys;
-import com.nickimpact.daycare.events.DaycareEventImpl;
-import com.nickimpact.daycare.text.TextParsingUtils;
+import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
+import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
+import com.nickimpact.daycare.sponge.events.DaycareEventImpl;
+import com.nickimpact.daycare.sponge.text.TextParsingUtils;
 import com.nickimpact.impactor.api.json.JsonTyping;
 import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
@@ -30,11 +30,18 @@ import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
-@JsonTyping("daycare_sponge_pokemon_wrapper")
+@JsonTyping("daycare_reforged_sponge_pokemon_wrapper")
 public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon> {
 
 	public ReforgedDaycarePokemonWrapper(Pokemon pokemon) {
 		super(pokemon);
+	}
+
+	private ReforgedDaycarePokemonWrapper(ReforgedDaycarePokemonWrapperBuilder builder) {
+		super(Pixelmon.pokemonFactory.create(GsonUtils.deserialize(builder.json)));
+		this.json = builder.json;
+		this.gainedLvls = builder.gainedLvls;
+		this.lastLevelTime = builder.lastLvl;
 	}
 
 	@Override
@@ -62,6 +69,10 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 	public void tryLevelUp(Ranch ranch, Pen pen) {
 		if(this.getDelegate().getLevel() + this.getGainedLevels() > 100) {
 			this.setGainedLevels(100 - this.getDelegate().getLevel());
+			return;
+		}
+
+		if(this.getDelegate().getLevel() + this.getGainedLevels() == 100) {
 			return;
 		}
 
@@ -127,14 +138,17 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 				if(!Sponge.getEventManager().post(event)) {
 					TextParsingUtils parser = SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils();
 					Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-					tokens.put("daycare_before_evo", src -> Optional.of(Text.of(pokemon.getSpecies().getPokemonName())));
-					tokens.put("daycare_after_evo", src -> Optional.of(Text.of(evolution.to.name)));
+
+					String prior = pokemon.getSpecies().getPokemonName();
+					tokens.put("pokemon_before_evo", src -> Optional.of(Text.of(prior)));
+					tokens.put("pokemon_after_evo", src -> Optional.of(Text.of(evolution.to.name)));
 
 					Map<String, Object> variables = Maps.newHashMap();
 					variables.put("pokemon", this.getDelegate());
 					variables.put("wrapper", this);
 
 					pokemon.evolve(evolution.to);
+					this.delegate = pokemon;
 					Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> player.sendMessages(parser.fetchAndParseMsgs(player, MsgConfigKeys.EVOLVE, tokens, variables)));
 
 					return true;
@@ -162,21 +176,21 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 		if(attacks != null) {
 			for(Attack attack : attacks) {
 				if(moveset.size() < 4) {
-					DaycareEventImpl.LearnMove event = new DaycareEventImpl.LearnMove(ranch.getOwnerUUID(), pen, this, attack.baseAttack);
+					DaycareEventImpl.LearnMove event = new DaycareEventImpl.LearnMove(ranch.getOwnerUUID(), pen, this, attack.getActualMove());
 					if(!Sponge.getEventManager().post(event)) {
 						moveset.add(attack);
 
-						tokens.put("daycare_new_move", src -> Optional.of(Text.of(attack.baseAttack.getTranslatedName().getUnformattedText())));
+						tokens.put("pokemon_new_move", src -> Optional.of(Text.of(attack.getActualMove().getTranslatedName().getUnformattedText())));
 						Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> player.sendMessages(parser.fetchAndParseMsgs(player, MsgConfigKeys.LEARN_MOVE, tokens, variables)));
 					}
 				} else {
-					DaycareEventImpl.LearnMove event = new DaycareEventImpl.LearnMove(ranch.getOwnerUUID(), pen, this, attack.baseAttack, moveset.get(0).baseAttack);
+					DaycareEventImpl.LearnMove event = new DaycareEventImpl.LearnMove(ranch.getOwnerUUID(), pen, this, attack.getActualMove(), moveset.get(0).getActualMove());
 					if(!Sponge.getEventManager().post(event)) {
 						Attack old = moveset.remove(0);
 						moveset.add(attack);
 
-						tokens.put("daycare_old_move", src -> Optional.of(Text.of(old.baseAttack.getTranslatedName().getUnformattedText())));
-						tokens.put("daycare_new_move", src -> Optional.of(Text.of(attack.baseAttack.getTranslatedName().getUnformattedText())));
+						tokens.put("pokemon_old_move", src -> Optional.of(Text.of(old.getActualMove().getTranslatedName().getUnformattedText())));
+						tokens.put("pokemon_new_move", src -> Optional.of(Text.of(attack.getActualMove().getTranslatedName().getUnformattedText())));
 						Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> player.sendMessages(parser.fetchAndParseMsgs(player, MsgConfigKeys.LEARN_MOVE_REPLACE, tokens, variables)));
 					}
 
@@ -188,5 +202,33 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 		}
 
 		return false;
+	}
+
+	public static class ReforgedDaycarePokemonWrapperBuilder implements DaycarePokemonWrapperBuilder {
+
+		private String json;
+		private int gainedLvls;
+		private LocalDateTime lastLvl;
+
+		public ReforgedDaycarePokemonWrapperBuilder json(String json) {
+			this.json = json;
+			return this;
+		}
+
+		public ReforgedDaycarePokemonWrapperBuilder gainedLvls(int lvls) {
+			this.gainedLvls = lvls;
+			return this;
+		}
+
+		public ReforgedDaycarePokemonWrapperBuilder lastLvl(LocalDateTime lastLvl) {
+			this.lastLvl = lastLvl;
+			return this;
+		}
+
+		@Override
+		public ReforgedDaycarePokemonWrapper build() {
+			return new ReforgedDaycarePokemonWrapper(this);
+		}
+
 	}
 }

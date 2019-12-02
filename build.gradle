@@ -18,14 +18,14 @@ plugins {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
-version '2.0.0'
+version '2.1.1'
 
 group 'com.nickimpact.daycare'
 
 ext {
-    pluginversion = '2.0.0'
+    pluginversion = '2.2.1'
     spongeapiversion = '7.1.0'
-    completeversion = "Reforged-7.0.6-S${spongeapiversion}-${pluginversion}"
+    completeversion = "Reforged-7.0.7-S${spongeapiversion}-${pluginversion}"
 }
 
 sourceCompatibility = targetCompatibility = "1.8" // Need this here so eclipse task generates correctly.
@@ -90,10 +90,10 @@ subprojects {
     }
 
     ext {
-        pluginversion = '2.0.0'
+        pluginversion = '2.2.1'
         spongeapiversion = '7.1.0'
-        reforged = "Reforged-7.0.6-S${spongeapiversion}-${pluginversion}"
-        generations = "Generations-2.6.2-S${spongeapiversion}-${pluginversion}"
+        reforged = "Reforged-7.1.1-S${spongeapiversion}-${pluginversion}"
+        generations = "Generations-2.8.0-S${spongeapiversion}-${pluginversion}"
     }
 
     repositories {
@@ -105,20 +105,15 @@ subprojects {
                 artifact "/[organisation]/[module]/release/[revision]/[ext]"
             }
         }
-    }
-
-    jar {
-        exclude 'Impactor*.jar'
-    }
-
-    shadowJar {
-        exclude 'Impactor*.jar'
+        maven {
+            url "https://nexus.unboundnetwork.net/repository/unbound-public/"
+        }
+        maven { url = "https://repo.aikar.co/content/groups/aikar/" }
     }
 
     dependencies {
-        shadow ('com.github.NickImpact:Impactor:Spigot-2.0.0') {
-            exclude group: 'com.github.NickImpact.Impactor', module: 'Impactor'
-        }
+        shadow "com.nickimpact.impactor:spigot:2.1.0"
+        shadow "com.nickimpact.impactor:sponge:2.1.0"
         shadow fileTree(dir: '../../Pixelmon Mixins/build/libs', include: 'Pixelmon Mixins-1.0.0-universal.jar')
         shadow "org.projectlombok:lombok:1.18.4"
         shadow 'com.google.guava:guava:27.1-jre'

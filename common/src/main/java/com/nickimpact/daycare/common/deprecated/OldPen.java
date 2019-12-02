@@ -1,6 +1,5 @@
 package com.nickimpact.daycare.common.deprecated;
 
-import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import lombok.Getter;
 
 import java.util.Date;

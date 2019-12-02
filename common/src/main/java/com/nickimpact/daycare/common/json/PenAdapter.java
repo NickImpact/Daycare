@@ -1,6 +1,5 @@
 package com.nickimpact.daycare.common.json;
 
-import com.google.gson.Gson;
 import com.nickimpact.daycare.api.IDaycarePlugin;
 import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.impactor.api.json.Adapter;
@@ -13,11 +12,6 @@ public class PenAdapter extends Adapter<Pen> {
 	public PenAdapter(IDaycarePlugin plugin) {
 		super(plugin);
 		this.registry = new Registry<>(plugin);
-	}
-
-	@Override
-	protected Gson getGson() {
-		return ((IDaycarePlugin) plugin).getGson();
 	}
 
 	@Override

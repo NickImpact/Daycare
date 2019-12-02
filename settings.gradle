@@ -1,8 +1,8 @@
 rootProject.name = 'Daycare'
 include 'api'
 include 'common'
-include 'sponge'
 include 'spigot'
 include 'generations'
 include 'reforged'
+include 'sponge'
 

@@ -1,11 +1,11 @@
 package com.nickimpact.daycare.reforged.pokemon;
 
-import com.nickimpact.daycare.SpongeDaycarePlugin;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
-import com.nickimpact.daycare.configuration.MsgConfigKeys;
+import com.nickimpact.daycare.reforged.utils.Flags;
+import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
+import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
 import com.nickimpact.impactor.api.configuration.Config;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
-import com.pixelmonmod.pixelmon.api.pokemon.PokemonSpec;
 import com.pixelmonmod.pixelmon.battles.attacks.specialAttacks.basic.HiddenPower;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.EVStore;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
@@ -156,19 +156,18 @@ public enum EnumPokemonFields {
 		return pokemon.getSpecialTexture().name();
 	}),
 	HIDDEN_POWER(pokemon -> HiddenPower.getHiddenPowerType(pokemon.getStats().ivs).getLocalizedName()),
-	MOVES_1(pokemon -> pokemon.getMoveset().attacks[0].baseAttack.getLocalizedName()),
-	MOVES_2(pokemon -> pokemon.getMoveset().attacks[1].baseAttack.getLocalizedName()),
-	MOVES_3(pokemon -> pokemon.getMoveset().attacks[2].baseAttack.getLocalizedName()),
-	MOVES_4(pokemon -> pokemon.getMoveset().attacks[3].baseAttack.getLocalizedName()),
+	MOVES_1(pokemon -> pokemon.getMoveset().attacks[0].getActualMove().getLocalizedName()),
+	MOVES_2(pokemon -> pokemon.getMoveset().attacks[1].getActualMove().getLocalizedName()),
+	MOVES_3(pokemon -> pokemon.getMoveset().attacks[2].getActualMove().getLocalizedName()),
+	MOVES_4(pokemon -> pokemon.getMoveset().attacks[3].getActualMove().getLocalizedName()),
 	SHINY_STATE(pokemon -> SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, pokemon.isShiny() ? MsgConfigKeys.TRANSLATIONS_YES : MsgConfigKeys.TRANSLATIONS_NO, null, null)),
 	POKERUS_STATE(pokemon -> SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, pokemon.isShiny() ? MsgConfigKeys.TRANSLATIONS_YES : MsgConfigKeys.TRANSLATIONS_NO, null, null)),
 	POKERUS(pokemon ->  pokemon.getPokerus() != null ? SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, MsgConfigKeys.POKERUS_TRANSLATION, null, null) : null),
 	UNBREEDABLE(pokemon -> {
-		PokemonSpec unbreedable = new PokemonSpec("unbreedable");
-		if(unbreedable.matches(pokemon)){
-			return SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, SpongeDaycarePlugin.getSpongeInstance().getMsgConfig(), MsgConfigKeys.BREEDABLE_TRANSLATION, null, null);
-		}else{
+		if(Flags.UNBREEDABLE.matches(pokemon)){
 			return SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, SpongeDaycarePlugin.getSpongeInstance().getMsgConfig(), MsgConfigKeys.UNBREEDABLE_TRANSLATION, null, null);
+		}else{
+			return SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, SpongeDaycarePlugin.getSpongeInstance().getMsgConfig(), MsgConfigKeys.BREEDABLE_TRANSLATION, null, null);
 		}
 	}),
 	POKE_BALL_NAME(pokemon ->{

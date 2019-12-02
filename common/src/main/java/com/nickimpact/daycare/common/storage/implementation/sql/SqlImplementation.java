@@ -28,25 +28,33 @@ package com.nickimpact.daycare.common.storage.implementation.sql;
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.api.IDaycarePlugin;
 import com.nickimpact.daycare.api.breeding.BreedStage;
-import com.nickimpact.daycare.api.pens.*;
+import com.nickimpact.daycare.common.deprecated.OldRanch;
 import com.nickimpact.daycare.common.storage.implementation.StorageImplementation;
-import com.nickimpact.daycare.common.storage.implementation.sql.connection.ConnectionFactory;
+import com.nickimpact.daycare.api.pens.DaycareNPC;
+import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
+import com.nickimpact.daycare.api.pens.Pen;
+import com.nickimpact.daycare.api.pens.Ranch;
+import com.nickimpact.daycare.api.pens.Settings;
+import com.nickimpact.daycare.api.pens.Statistics;
+import com.nickimpact.impactor.api.storage.sql.ConnectionFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 @SuppressWarnings("all")
 public class SqlImplementation implements StorageImplementation {
 
+	// Ranches
 	private static final String ADD_RANCH = "INSERT INTO `{prefix}ranch` VALUES(?, ?, ?)";
 	private static final String ADD_PEN = "INSERT INTO `{prefix}pens` VALUES(?, ?, ?)";
 	private static final String ADD_PEN_DATA = "INSERT INTO `{prefix}pen` (pen, unlocked, settings) VALUES(?, ?, ?)";
@@ -61,6 +69,11 @@ public class SqlImplementation implements StorageImplementation {
 	private static final String DELETE_RANCH = "DELETE FROM `{prefix}ranch` WHERE owner = ?";
 	private static final String DELETE_PEN_BASE = "DELETE FROM `{prefix}pens` WHERE ranch = ?";
 	private static final String DELETE_PEN_DATA = "DELETE FROM `{prefix}pen` WHERE pen = ?";
+
+	// NPCs
+	private static final String ADD_NPC = "INSERT INTO `{prefix}npcs` VALUES(?, ?)";
+	private static final String DELETE_NPC = "DELETE FROM  `{prefix}npcs` WHERE uuid = ?";
+	private static final String GET_NPCS = "SELECT * FROM `{prefix}npcs`";
 
 	private static final String GET_RANCH =
 			"SELECT ranch, stats " +
@@ -161,30 +174,34 @@ public class SqlImplementation implements StorageImplementation {
 
 	@Override
 	public boolean addRanch(Ranch ranch) throws Exception {
-		Connection connection = this.connectionFactory.getConnection();
-		PreparedStatement ps = connection.prepareStatement(this.processor.apply(ADD_RANCH));
-		ps.setString(1, ranch.getOwnerUUID().toString());
-		ps.setString(2, ranch.getIdentifier().toString());
-		Clob stats = connection.createClob();
-		stats.setString(1, plugin.getGson().toJson(new Statistics()));
-		ps.setClob(3, stats);
-		ps.executeUpdate();
+		try {
+			Connection connection = this.connectionFactory.getConnection();
+			PreparedStatement ps = connection.prepareStatement(this.processor.apply(ADD_RANCH));
+			ps.setString(1, ranch.getOwnerUUID().toString());
+			ps.setString(2, ranch.getIdentifier().toString());
+			Clob stats = connection.createClob();
+			stats.setString(1, plugin.getGson().toJson(new Statistics()));
+			ps.setClob(3, stats);
+			ps.executeUpdate();
 
-		for (Pen pen : (List<Pen>) ranch.getPens()) {
-			PreparedStatement ps2 = connection.prepareStatement(this.processor.apply(ADD_PEN));
-			ps2.setString(1, ranch.getIdentifier().toString());
-			ps2.setString(2, pen.getIdentifier().toString());
-			ps2.setInt(3, pen.getID());
-			ps2.executeUpdate();
+			for (Pen pen : (List<Pen>) ranch.getPens()) {
+				PreparedStatement ps2 = connection.prepareStatement(this.processor.apply(ADD_PEN));
+				ps2.setString(1, ranch.getIdentifier().toString());
+				ps2.setString(2, pen.getIdentifier().toString());
+				ps2.setInt(3, pen.getID());
+				ps2.executeUpdate();
 
-			PreparedStatement ps3 = connection.prepareStatement(this.processor.apply(ADD_PEN_DATA));
-			ps3.setString(1, pen.getIdentifier().toString());
-			ps3.setBoolean(2, pen.isUnlocked());
+				PreparedStatement ps3 = connection.prepareStatement(this.processor.apply(ADD_PEN_DATA));
+				ps3.setString(1, pen.getIdentifier().toString());
+				ps3.setBoolean(2, pen.isUnlocked());
 
-			Clob settings = connection.createClob();
-			settings.setString(1, plugin.getGson().toJson(pen.getSettings()));
-			ps3.setClob(3, settings);
-			ps3.executeUpdate();
+				Clob settings = connection.createClob();
+				settings.setString(1, plugin.getGson().toJson(pen.getSettings()));
+				ps3.setClob(3, settings);
+				ps3.executeUpdate();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		return true;
@@ -192,31 +209,31 @@ public class SqlImplementation implements StorageImplementation {
 
 	@Override
 	public boolean updateRanch(Ranch ranch) throws Exception {
-		Connection connection = this.connectionFactory.getConnection();
-		PreparedStatement r = connection.prepareStatement(this.processor.apply(UPDATE_RANCH_STATISTICS));
-		Clob stats = connection.createClob();
-		stats.setString(1, plugin.getGson().toJson(ranch.getStats()));
-		r.setClob(1, stats);
-		r.setString(2, ranch.getOwnerUUID().toString());
-		r.setString(3, ranch.getIdentifier().toString());
-		r.executeUpdate();
+		try {
+			Connection connection = this.connectionFactory.getConnection();
+			PreparedStatement r = connection.prepareStatement(this.processor.apply(UPDATE_RANCH_STATISTICS));
+			Clob stats = connection.createClob();
+			stats.setString(1, plugin.getGson().toJson(ranch.getStats()));
+			r.setClob(1, stats);
+			r.setString(2, ranch.getOwnerUUID().toString());
+			r.setString(3, ranch.getIdentifier().toString());
+			r.executeUpdate();
 
-		for(Pen pen : (List<Pen>) ranch.getPens()) {
-			if(pen.isDirty()) {
-				if((((Optional<DaycarePokemonWrapper>)pen.getAtPosition(1)).map(DaycarePokemonWrapper::isDirty).orElse(false))) {
+			for (Pen pen : (List<Pen>) ranch.getPens()) {
+				if (pen.getAtPosition(1).isPresent()) {
 					this.updatePenSlot(connection, pen.getIdentifier(), PenSlot.FIRST, (DaycarePokemonWrapper) pen.getAtPosition(1).get());
-				} else if(!pen.getAtPosition(1).isPresent()) {
+				} else {
 					this.updatePenSlot(connection, pen.getIdentifier(), PenSlot.FIRST, null);
 				}
 
-				if((((Optional<DaycarePokemonWrapper>)pen.getAtPosition(2)).map(DaycarePokemonWrapper::isDirty).orElse(false))) {
+				if (pen.getAtPosition(2).isPresent()) {
 					this.updatePenSlot(connection, pen.getIdentifier(), PenSlot.SECOND, (DaycarePokemonWrapper) pen.getAtPosition(2).get());
-				} else if(!pen.getAtPosition(2).isPresent()) {
+				} else {
 					this.updatePenSlot(connection, pen.getIdentifier(), PenSlot.SECOND, null);
 				}
 
 				PreparedStatement egg = connection.prepareStatement(processor.apply(UPDATE_PEN_EGG));
-				if(pen.getEgg().isPresent()) {
+				if (pen.getEgg().isPresent()) {
 					Clob e = connection.createClob();
 					e.setString(1, plugin.getGson().toJson(pen.getEgg().get(), DaycarePokemonWrapper.class));
 					egg.setClob(1, e);
@@ -226,18 +243,16 @@ public class SqlImplementation implements StorageImplementation {
 				egg.setString(2, pen.getIdentifier().toString());
 				egg.executeUpdate();
 
-				if(pen.getSettings().isDirty()) {
-					PreparedStatement settings = connection.prepareStatement(processor.apply(UPDATE_PEN_SETTINGS));
-					Clob s = connection.createClob();
-					s.setString(1, plugin.getGson().toJson(pen.getSettings()));
-					settings.setClob(1, s);
-					settings.setString(2, pen.getIdentifier().toString());
-					settings.executeUpdate();
-					pen.getSettings().clean();
-				}
+				PreparedStatement settings = connection.prepareStatement(processor.apply(UPDATE_PEN_SETTINGS));
+				Clob s = connection.createClob();
+				s.setString(1, plugin.getGson().toJson(pen.getSettings()));
+				settings.setClob(1, s);
+				settings.setString(2, pen.getIdentifier().toString());
+				settings.executeUpdate();
+				pen.getSettings().clean();
 
 				PreparedStatement stage = connection.prepareStatement(processor.apply(UPDATE_PEN_STAGE));
-				if(pen.getStage() == null) {
+				if (pen.getStage() == null) {
 					stage.setNull(1, Types.VARCHAR);
 				} else {
 					stage.setString(1, pen.getStage().name());
@@ -245,13 +260,19 @@ public class SqlImplementation implements StorageImplementation {
 				stage.setString(2, pen.getIdentifier().toString());
 				stage.executeUpdate();
 
-				PreparedStatement unlocked = connection.prepareStatement(processor.apply(UPDATE_PEN_UNLOCK_STATUS));
-				unlocked.setBoolean(1, pen.isUnlocked());
-				unlocked.setTimestamp(2, Timestamp.valueOf(pen.getDateUnlocked()));
-				unlocked.setString(3, pen.getIdentifier().toString());
-				unlocked.executeUpdate();
-				pen.clean();
+				if (pen.isUnlocked()) {
+					PreparedStatement unlocked = connection.prepareStatement(processor.apply(UPDATE_PEN_UNLOCK_STATUS));
+					unlocked.setBoolean(1, true);
+					if (pen.getDateUnlocked() == null) {
+						pen.unlock();
+					}
+					unlocked.setTimestamp(2, Timestamp.valueOf(pen.getDateUnlocked()));
+					unlocked.setString(3, pen.getIdentifier().toString());
+					unlocked.executeUpdate();
+				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		return true;
@@ -294,6 +315,36 @@ public class SqlImplementation implements StorageImplementation {
 	@Override
 	public Optional<Ranch> getRanch(UUID player) throws Exception {
 		Ranch ranch = null;
+		if(tableExists(processor.apply("{prefix}ranches"))) {
+			plugin.getPluginLogger().warn("Detected legacy database, attempting to update...");
+
+			Connection connection = connectionFactory.getConnection();
+			PreparedStatement ps = connection.prepareStatement(processor.apply("SELECT * FROM `{prefix}ranches`"));
+			ResultSet results = ps.executeQuery();
+
+			int success = 0;
+			int failed = 0;
+			while(results.next()) {
+				try {
+					OldRanch r = plugin.getGson().fromJson(results.getString("ranch"), OldRanch.class);
+					plugin.getPluginLogger().warn("Attempting to convert ranch for owner with ID: " + r.getOwnerUUID().toString());
+					this.convert(r);
+					++success;
+				} catch (Exception e) {
+					++failed;
+					e.printStackTrace();
+				}
+			}
+
+			if(failed == 0) {
+				plugin.getPluginLogger().warn(String.format("Converted %d ranches successfully, purging old database...", success));
+				PreparedStatement drop = connection.prepareStatement(processor.apply("DROP TABLE `{prefix}ranches`"));
+				drop.executeUpdate();
+			} else {
+				plugin.getPluginLogger().warn("Failed to convert " + failed + " ranches, preserving any data that failed to be dropped!");
+			}
+		}
+
 		Connection connection = connectionFactory.getConnection();
 		PreparedStatement ps = connection.prepareStatement(processor.apply(GET_RANCH));
 		ps.setString(1, player.toString());
@@ -343,17 +394,36 @@ public class SqlImplementation implements StorageImplementation {
 
 	@Override
 	public boolean addNPC(DaycareNPC npc) throws Exception {
-		return false;
+		Connection connection = this.connectionFactory.getConnection();
+		PreparedStatement ps = connection.prepareStatement(this.processor.apply(ADD_NPC));
+		ps.setString(1, npc.getUuid().toString());
+		ps.setString(2, npc.getName());
+		ps.executeUpdate();
+
+		return true;
 	}
 
 	@Override
 	public boolean deleteNPC(DaycareNPC npc) throws Exception {
-		return false;
+		Connection connection = this.connectionFactory.getConnection();
+		PreparedStatement ps = connection.prepareStatement(this.processor.apply(DELETE_NPC));
+		ps.setString(1, npc.getUuid().toString());
+		ps.executeUpdate();
+
+		return true;
 	}
 
 	@Override
 	public List<DaycareNPC> getNPCs() throws Exception {
-		return null;
+		List<DaycareNPC> npcs = Lists.newArrayList();
+		Connection connection = this.connectionFactory.getConnection();
+		PreparedStatement ps = connection.prepareStatement(this.processor.apply(GET_NPCS));
+		ResultSet results = ps.executeQuery();
+		while(results.next()) {
+			npcs.add(new DaycareNPC(UUID.fromString(results.getString("uuid")), results.getString("name")));
+		}
+
+		return npcs;
 	}
 
 	private boolean tableExists(String table) throws SQLException {
@@ -367,5 +437,47 @@ public class SqlImplementation implements StorageImplementation {
 				return false;
 			}
 		}
+	}
+
+	private void convert(OldRanch ranch) throws Exception {
+		List<Pen> pens = Lists.newArrayList();
+		AtomicInteger i = new AtomicInteger(1);
+		ranch.getPens().forEach(op -> {
+			pens.add(Pen.builder()
+					.id(i.getAndIncrement())
+					.identifier(UUID.randomUUID())
+					.settings(ranch.getSettings())
+					.dateUnlocked(op.getDateUnlocked() != null ? op.getDateUnlocked().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null)
+					.unlocked(op.isUnlocked())
+					.slot1(op.getSlot1() != null ? DaycarePokemonWrapper
+							.builder()
+							.json(op.getSlot1().getJson())
+							.gainedLvls(op.getSlot1().getGainedLvls())
+							.lastLvl(op.getSlot1().getLastLvl().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+							.build() : null
+					)
+					.slot2(op.getSlot2() != null ? DaycarePokemonWrapper
+							.builder()
+							.json(op.getSlot2().getJson())
+							.gainedLvls(op.getSlot2().getGainedLvls())
+							.lastLvl(op.getSlot2().getLastLvl().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+							.build() : null
+					)
+					.egg(op.getEgg() != null ? DaycarePokemonWrapper
+							.builder()
+							.json(op.getEgg().getJson())
+							.build() : null
+					)
+					.build()
+			);
+		});
+
+		Ranch r = Ranch.builder()
+				.identifier(UUID.randomUUID())
+				.owner(ranch.getOwnerUUID())
+				.pens(pens)
+				.stats(ranch.getStats())
+				.build();
+		this.addRanch(r);
 	}
 }

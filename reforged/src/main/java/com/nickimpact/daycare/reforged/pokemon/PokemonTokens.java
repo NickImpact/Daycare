@@ -2,8 +2,8 @@ package com.nickimpact.daycare.reforged.pokemon;
 
 import com.google.common.collect.Maps;
 import com.nickimpact.daycare.reforged.implementation.ReforgedDaycarePokemonWrapper;
-import com.nickimpact.daycare.text.TokenHolder;
-import com.nickimpact.daycare.text.Translator;
+import com.nickimpact.daycare.sponge.text.TokenHolder;
+import com.nickimpact.daycare.sponge.text.Translator;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import org.spongepowered.api.text.Text;
 

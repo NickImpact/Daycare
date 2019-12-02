@@ -1,6 +1,5 @@
 package com.nickimpact.daycare.common.deprecated;
 
-import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Settings;
 import com.nickimpact.daycare.api.pens.Statistics;
 import lombok.Getter;

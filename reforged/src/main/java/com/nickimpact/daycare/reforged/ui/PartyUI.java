@@ -1,13 +1,12 @@
 package com.nickimpact.daycare.reforged.ui;
 
 import com.google.common.collect.Maps;
-import com.nickimpact.daycare.SpongeDaycarePlugin;
-import com.nickimpact.daycare.configuration.MsgConfigKeys;
-import com.nickimpact.daycare.implementation.SpongePen;
-import com.nickimpact.daycare.implementation.SpongeRanch;
+import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
+import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
+import com.nickimpact.daycare.sponge.implementation.SpongeRanch;
 import com.nickimpact.daycare.reforged.implementation.ReforgedPen;
-import com.nickimpact.daycare.ui.common.CommonUIComponents;
-import com.nickimpact.daycare.utils.SpongeItemTypeUtil;
+import com.nickimpact.daycare.sponge.ui.common.CommonUIComponents;
+import com.nickimpact.daycare.sponge.utils.SpongeItemTypeUtil;
 import com.nickimpact.impactor.sponge.ui.SpongeIcon;
 import com.nickimpact.impactor.sponge.ui.SpongeLayout;
 import com.nickimpact.impactor.sponge.ui.SpongeUI;
@@ -80,10 +79,15 @@ public class PartyUI {
 			if(!pokemon.isEgg()) {
 				icon.addListener(clickable -> {
 					this.display.close(this.viewer);
-					this.pen.addAtSlot(pokemon, slot);
-					this.party.set(this.party.getPosition(pokemon), null);
-					SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(this.ranch);
-					this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.ADD_POKEMON, tokens, variables));
+
+					if(this.party.getTeam().size() != 1) {
+						this.pen.addAtSlot(pokemon, slot);
+						this.party.set(this.party.getPosition(pokemon), null);
+						SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(this.ranch);
+						this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.ADD_POKEMON, tokens, variables));
+					} else {
+						this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.LAST_NON_EGG, tokens, variables));
+					}
 				});
 			}
 			slb.slot(icon, i);

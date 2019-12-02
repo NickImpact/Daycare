@@ -33,10 +33,10 @@ import com.nickimpact.daycare.common.storage.implementation.file.loaders.HoconLo
 import com.nickimpact.daycare.common.storage.implementation.file.loaders.JsonLoader;
 import com.nickimpact.daycare.common.storage.implementation.file.loaders.YamlLoader;
 import com.nickimpact.daycare.common.storage.implementation.sql.SqlImplementation;
-import com.nickimpact.daycare.common.storage.implementation.sql.connection.file.H2ConnectionFactory;
-import com.nickimpact.daycare.common.storage.implementation.sql.connection.hikari.MariaDBConnectionFactory;
-import com.nickimpact.daycare.common.storage.implementation.sql.connection.hikari.MySQLConnectionFactory;
 import com.nickimpact.impactor.api.storage.StorageType;
+import com.nickimpact.impactor.api.storage.sql.file.H2ConnectionFactory;
+import com.nickimpact.impactor.api.storage.sql.hikari.MariaDBConnectionFactory;
+import com.nickimpact.impactor.api.storage.sql.hikari.MySQLConnectionFactory;
 
 import java.io.File;
 

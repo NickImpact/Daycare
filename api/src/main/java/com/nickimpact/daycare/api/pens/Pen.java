@@ -76,6 +76,12 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 		return Optional.ofNullable(egg);
 	}
 
+	public T claimEgg() {
+		T egg = this.egg;
+		this.egg = null;
+		return egg;
+	}
+
 	public boolean isEmpty() {
 		return !getAtPosition(1).isPresent() && !getAtPosition(2).isPresent();
 	}

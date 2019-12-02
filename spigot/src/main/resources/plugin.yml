@@ -1,0 +1,7 @@
+main: com.nickimpact.daycare.SpigotDaycarePlugin
+name: Daycare
+version: 2.0.4
+author: NickImpact
+depend:
+  - Impactor
+  - Vault

@@ -1,6 +1,8 @@
 package com.nickimpact.daycare.api.pens;
 
 import com.nickimpact.daycare.api.util.GsonUtils;
+import com.nickimpact.daycare.api.util.PluginInstance;
+import com.nickimpact.impactor.api.building.Builder;
 import net.minecraft.nbt.NBTTagCompound;
 
 import java.time.LocalDateTime;
@@ -10,8 +12,8 @@ public abstract class DaycarePokemonWrapper<T> {
 	protected String json;
 	protected transient T delegate;
 
-	private int gainedLvls;
-	private LocalDateTime lastLevelTime;
+	protected int gainedLvls;
+	protected LocalDateTime lastLevelTime;
 
 	private transient boolean dirty;
 
@@ -68,4 +70,18 @@ public abstract class DaycarePokemonWrapper<T> {
 	public abstract boolean evolve(Ranch ranch, Pen pen);
 
 	public abstract boolean learnMove(Ranch ranch, Pen pen);
+
+	public static DaycarePokemonWrapperBuilder builder() {
+		return PluginInstance.getPlugin().getService().getBuilderRegistry().createFor(DaycarePokemonWrapperBuilder.class);
+	}
+
+	public interface DaycarePokemonWrapperBuilder extends Builder<DaycarePokemonWrapper> {
+
+		DaycarePokemonWrapperBuilder json(String json);
+
+		DaycarePokemonWrapperBuilder gainedLvls(int lvls);
+
+		DaycarePokemonWrapperBuilder lastLvl(LocalDateTime lastLvl);
+
+	}
 }

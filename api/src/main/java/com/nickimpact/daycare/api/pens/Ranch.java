@@ -26,6 +26,10 @@ public abstract class Ranch<T extends Pen> {
 		for(int i = 0; i < PluginInstance.getPlugin().getConfiguration().get(ConfigKeys.NUM_PENS); i++) {
 			this.pens.add(this.newPen(i + 1));
 		}
+
+		for(int i = 0; i < 2; i++) {
+			this.pens.get(i).unlock();
+		}
 	}
 
 	protected Ranch(UUID identifier, UUID owner, List<T> pens, Statistics stats) {

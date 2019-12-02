@@ -2,12 +2,12 @@ package com.nickimpact.daycare.reforged.ui;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.nickimpact.daycare.SpongeDaycarePlugin;
-import com.nickimpact.daycare.configuration.MsgConfigKeys;
-import com.nickimpact.daycare.implementation.SpongeRanch;
+import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
+import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
+import com.nickimpact.daycare.sponge.implementation.SpongeRanch;
 import com.nickimpact.daycare.reforged.implementation.ReforgedPen;
-import com.nickimpact.daycare.ui.common.CommonUIComponents;
-import com.nickimpact.daycare.utils.SpongeItemTypeUtil;
+import com.nickimpact.daycare.sponge.ui.common.CommonUIComponents;
+import com.nickimpact.daycare.sponge.utils.SpongeItemTypeUtil;
 import com.nickimpact.impactor.sponge.ui.SpongeIcon;
 import com.nickimpact.impactor.sponge.ui.SpongeLayout;
 import com.nickimpact.impactor.sponge.ui.SpongePage;
@@ -70,13 +70,15 @@ public class PcUI {
 				rep.offer(Keys.ITEM_LORE, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(this.viewer, MsgConfigKeys.POKEMON_LORE_SELECT, tokens, variables));
 				SpongeIcon icon = new SpongeIcon(rep);
 				icon.addListener(clickable -> {
-					this.page.close();
-					this.pc.set(wrapper.box, wrapper.pos, null);
-					this.pen.addAtSlot(wrapper.pokemon, this.slot);
-					SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(this.ranch);
-					this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.ADD_POKEMON, tokens, variables));
+					if(!wrapper.pokemon.isEgg()) {
+						this.page.close();
+						this.pc.set(wrapper.box, wrapper.pos, null);
+						this.pen.addAtSlot(wrapper.pokemon, this.slot);
+						SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(this.ranch);
+						this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.ADD_POKEMON, tokens, variables));
 
-					new ReforgedPenUI(this.viewer, this.ranch, this.pen).open();
+						new ReforgedPenUI(this.viewer, this.ranch, this.pen).open();
+					}
 				});
 
 				return icon;
