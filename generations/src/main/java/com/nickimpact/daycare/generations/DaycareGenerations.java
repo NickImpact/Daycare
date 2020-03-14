@@ -43,6 +43,8 @@ import java.util.concurrent.ExecutionException;
 public class DaycareGenerations extends SpongeDaycarePlugin {
 
     private PluginBootstrap bootstrap;
+    
+    private DependencyManager dependencyManager;
 
     @Inject
     @Getter
@@ -83,6 +85,9 @@ public class DaycareGenerations extends SpongeDaycarePlugin {
 
     @Listener
     public void onInit(GameInitializationEvent event) {
+        //must be set before booststrap init, otherwise high risk of NPE
+        this.dependencyManager = new DependencyManager(this);
+        
         bootstrap.init();
         new PokemonTokens().getTokens().forEach(tokens::register);
     }
@@ -121,7 +126,9 @@ public class DaycareGenerations extends SpongeDaycarePlugin {
 
     @Override
     public DependencyManager getDependencyManager() {
-        return SpongeImpactorPlugin.getInstance().getDependencyManager();
+        //this may or may not work and fully depends on whether or not the Impactor plugin is initialized, if it isnt, the plugin crashes
+        //return SpongeImpactorPlugin.getInstance().getDependencyManager();
+        return this.dependencyManager;
     }
 
     @Override
