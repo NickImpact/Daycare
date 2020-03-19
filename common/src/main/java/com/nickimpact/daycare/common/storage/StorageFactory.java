@@ -28,10 +28,7 @@ package com.nickimpact.daycare.common.storage;
 import com.nickimpact.daycare.api.IDaycarePlugin;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.common.storage.implementation.StorageImplementation;
-import com.nickimpact.daycare.common.storage.implementation.file.ConfigurateStorage;
-import com.nickimpact.daycare.common.storage.implementation.file.loaders.HoconLoader;
-import com.nickimpact.daycare.common.storage.implementation.file.loaders.JsonLoader;
-import com.nickimpact.daycare.common.storage.implementation.file.loaders.YamlLoader;
+import com.nickimpact.daycare.common.storage.implementation.file.FlatfileStorage;
 import com.nickimpact.daycare.common.storage.implementation.sql.SqlImplementation;
 import com.nickimpact.impactor.api.storage.StorageType;
 import com.nickimpact.impactor.api.storage.sql.file.H2ConnectionFactory;
@@ -86,30 +83,11 @@ public class StorageFactory {
                         new H2ConnectionFactory(this.plugin, new File("daycare").toPath().resolve("daycare-h2")),
                         this.plugin.getConfiguration().get(ConfigKeys.SQL_TABLE_PREFIX)
                 );
-            case YAML:
-            default:
-                return new ConfigurateStorage(
-                        this.plugin,
-                        "YAML",
-                        new YamlLoader(),
-                        ".yml",
-                        "yaml-storage"
-                );
             case JSON:
-                return new ConfigurateStorage(
+            default:
+                return new FlatfileStorage(
                         this.plugin,
-                        "JSON",
-                        new JsonLoader(),
-                        ".json",
-                        "json-storage"
-                );
-            case HOCON:
-                return new ConfigurateStorage(
-                        this.plugin,
-                        "HOCON",
-                        new HoconLoader(),
-                        ".hocon",
-                        "hocon-storage"
+                        "JSON"
                 );
         }
     }

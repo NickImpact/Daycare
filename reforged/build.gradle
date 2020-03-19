@@ -1,5 +1,5 @@
 shadowJar {
-    archiveName = "Daycare-${project.ext.reforged}.jar"
+    archiveName = "Daycare-Sponge-${project.ext.reforged}.jar"
 }
 
 reobf {
@@ -31,7 +31,7 @@ dependencies {
     compile project(':common')
     compile project(':sponge')
     shadow 'org.spongepowered:spongeapi:7.1.0'
-    shadow 'reforged:server:7.0.8@Pixelmon-1.12.2-7.0.8-server.jar'
+    shadow 'reforged:server:7.2.1@Pixelmon-1.12.2-7.2.1-server.jar'
     shadow 'io.github.nucleuspowered:nucleus-api:1.11.0-S7.1'
     shadow 'co.aikar:acf-sponge:0.5.0-SNAPSHOT'
 }

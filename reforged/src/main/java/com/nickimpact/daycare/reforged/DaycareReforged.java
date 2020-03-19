@@ -31,10 +31,13 @@ import org.spongepowered.api.event.service.ChangeServiceProviderEvent;
 import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.scheduler.AsynchronousExecutor;
+import org.spongepowered.api.scheduler.SpongeExecutorService;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Plugin(id = "daycare", name = "Daycare", version = "2.0.1", dependencies = {@Dependency(id = "impactor"), @Dependency(id = "nucleus")})
 public class DaycareReforged extends SpongeDaycarePlugin {
@@ -52,6 +55,10 @@ public class DaycareReforged extends SpongeDaycarePlugin {
     @ConfigDir(sharedRoot = false)
     protected Path configDir;
 
+    @Inject
+    @AsynchronousExecutor
+    private SpongeExecutorService asyncExecutor;
+
     public DaycareReforged() {
         super();
         this.bootstrap = new PluginBootstrap(this);
@@ -65,6 +72,8 @@ public class DaycareReforged extends SpongeDaycarePlugin {
     @Listener
     public void onPreInit(GamePreInitializationEvent event) {
         this.bootstrap.preInit();
+
+        super.asyncExecutor = this.asyncExecutor;
 
         PokemonWrapperAdapter pwa = new PokemonWrapperAdapter(this);
         try {

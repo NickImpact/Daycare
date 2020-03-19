@@ -19,8 +19,6 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
     private boolean cancelled;
 
-    private static final HandlerList handlers = new HandlerList();
-
     public DaycareEventImpl(UUID uuid, Pen pen) {
         this.owner = uuid;
         this.pen = pen;
@@ -49,6 +47,7 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
     public static class AddPokemon extends DaycareEventImpl implements DaycareEvent.AddPokemon<DaycarePokemonWrapper> {
 
         private DaycarePokemonWrapper pokemon;
+        private static HandlerList handlerList = new HandlerList();
 
         public AddPokemon(UUID uuid, Pen pen, DaycarePokemonWrapper pokemon) {
             super(uuid, pen);
@@ -62,13 +61,18 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
         @Override
         public HandlerList getHandlers() {
-            return null;
+            return handlerList;
+        }
+
+        public static HandlerList getHandlerList() {
+            return handlerList;
         }
     }
 
     public static class RemovePokemon extends DaycareEventImpl implements DaycareEvent.RemovePokemon<DaycarePokemonWrapper> {
 
         private DaycarePokemonWrapper pokemon;
+        private static HandlerList handlerList = new HandlerList();
 
         public RemovePokemon(UUID uuid, Pen pen, DaycarePokemonWrapper pokemon) {
             super(uuid, pen);
@@ -82,7 +86,11 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
         @Override
         public HandlerList getHandlers() {
-            return null;
+            return handlerList;
+        }
+
+        public static HandlerList getHandlerList() {
+            return handlerList;
         }
     }
 
@@ -91,6 +99,8 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
         private DaycarePokemonWrapper male;
         private DaycarePokemonWrapper female;
         private DaycarePokemonWrapper egg;
+
+        private static HandlerList handlerList = new HandlerList();
 
         public Breed(UUID uuid, Pen pen, DaycarePokemonWrapper male, DaycarePokemonWrapper female, DaycarePokemonWrapper egg) {
             super(uuid, pen);
@@ -121,17 +131,19 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
         @Override
         public HandlerList getHandlers() {
-            return handlers;
+            return handlerList;
         }
 
         public static HandlerList getHandlerList() {
-            return handlers;
+            return handlerList;
         }
     }
 
     public static class CollectEgg extends DaycareEventImpl implements DaycareEvent.CollectEgg<DaycarePokemonWrapper> {
 
         private DaycarePokemonWrapper egg;
+
+        private static HandlerList handlerList = new HandlerList();
 
         public CollectEgg(UUID uuid, Pen pen, DaycarePokemonWrapper egg) {
             super(uuid, pen);
@@ -144,11 +156,11 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
         @Override
         public HandlerList getHandlers() {
-            return handlers;
+            return handlerList;
         }
 
         public static HandlerList getHandlerList() {
-            return handlers;
+            return handlerList;
         }
     }
 
@@ -157,6 +169,8 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
         private DaycarePokemonWrapper pokemon;
         private int level;
         private int gained;
+
+        private static HandlerList handlerList = new HandlerList();
 
         public LevelUp(UUID uuid, Pen pen, DaycarePokemonWrapper wrapper, int level) {
             super(uuid, pen);
@@ -182,11 +196,11 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
         @Override
         public HandlerList getHandlers() {
-            return handlers;
+            return handlerList;
         }
 
         public static HandlerList getHandlerList() {
-            return handlers;
+            return handlerList;
         }
     }
 
@@ -195,6 +209,8 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
         private DaycarePokemonWrapper learner;
         private AttackBase learned;
         private AttackBase forgot;
+
+        private static HandlerList handlerList = new HandlerList();
 
         public LearnMove(UUID uuid, Pen pen, DaycarePokemonWrapper learner, AttackBase learned) {
             this(uuid, pen, learner, learned, null);
@@ -225,11 +241,11 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
         @Override
         public HandlerList getHandlers() {
-            return handlers;
+            return handlerList;
         }
 
         public static HandlerList getHandlerList() {
-            return handlers;
+            return handlerList;
         }
     }
 
@@ -237,6 +253,8 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
         private DaycarePokemonWrapper evolving;
         private EnumSpecies to;
+
+        private static HandlerList handlerList = new HandlerList();
 
         public Evolve(UUID uuid, Pen pen, DaycarePokemonWrapper evolving, EnumSpecies to) {
             super(uuid, pen);
@@ -256,11 +274,11 @@ public abstract class DaycareEventImpl extends Event implements DaycareEvent, Ca
 
         @Override
         public HandlerList getHandlers() {
-            return handlers;
+            return handlerList;
         }
 
         public static HandlerList getHandlerList() {
-            return handlers;
+            return handlerList;
         }
     }
 }

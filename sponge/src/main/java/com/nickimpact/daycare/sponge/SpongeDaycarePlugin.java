@@ -16,6 +16,7 @@ import com.nickimpact.impactor.api.plugin.PluginInfo;
 import lombok.Getter;
 import lombok.Setter;
 import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.service.economy.EconomyService;
 
 import java.util.List;
@@ -37,6 +38,8 @@ public abstract class SpongeDaycarePlugin extends DaycarePlugin {
 
 	protected DaycareTokens tokens;
 
+	protected SpongeExecutorService asyncExecutor;
+
 	public SpongeDaycarePlugin() {
 		spongeInstance = this;
 		PluginInstance.setPlugin(this);
@@ -44,7 +47,7 @@ public abstract class SpongeDaycarePlugin extends DaycarePlugin {
 
 	@Override
 	public ScheduledExecutorService getAsyncExecutor() {
-		return null;
+		return this.asyncExecutor;
 	}
 
 	@Override

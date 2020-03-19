@@ -5,12 +5,13 @@ import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
 import com.nickimpact.impactor.api.configuration.Config;
 import com.pixelmonmod.pixelmon.battles.attacks.specialAttacks.basic.HiddenPower;
+import com.pixelmonmod.pixelmon.entities.pixelmon.Entity4Textures;
 import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EnumSpecialTexture;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.EVsStore;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.IVStore;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.StatsType;
+import com.pixelmonmod.pixelmon.entities.pixelmon.textures.IEnumSpecialTexture;
 import com.pixelmonmod.pixelmon.enums.EnumPokemon;
 import com.pixelmonmod.pixelmon.storage.NbtKeys;
 import net.minecraft.entity.Entity;
@@ -143,9 +144,7 @@ public enum EnumPokemonFields {
 
 		return pokemon.getIsShiny() ? SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, SpongeDaycarePlugin.getSpongeInstance().getMsgConfig(), MsgConfigKeys.SHINY_TRANSLATION, null, null).toPlain() : "";
 	}),
-	SPECIAL_TEXTURE(pokemon -> {
-		return EnumSpecialTexture.fromIndex(pokemon.getSpecialTextureIndex()).name();
-	}),
+	SPECIAL_TEXTURE(Entity4Textures::getSpecialTexture),
 	HIDDEN_POWER(pokemon -> HiddenPower.getHiddenPowerType(pokemon.stats.IVs).name()),
 	MOVES_1(pokemon -> pokemon.getMoveset().attacks[0].baseAttack.getLocalizedName()),
 	MOVES_2(pokemon -> pokemon.getMoveset().attacks[1].baseAttack.getLocalizedName()),
