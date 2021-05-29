@@ -36,7 +36,8 @@ import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Ranch;
 import com.nickimpact.daycare.api.pens.Settings;
 import com.nickimpact.daycare.api.pens.Statistics;
-import com.nickimpact.impactor.api.storage.sql.ConnectionFactory;
+import net.impactdev.impactor.api.Impactor;
+import net.impactdev.impactor.api.storage.sql.ConnectionFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -351,7 +352,7 @@ public class SqlImplementation implements StorageImplementation {
 		ResultSet results = ps.executeQuery();
 
 		if (results.next()) {
-			Ranch.RanchBuilder builder = plugin.getService().getBuilderRegistry().createFor(Ranch.RanchBuilder.class);
+			Ranch.RanchBuilder builder = Impactor.getInstance().getRegistry().createBuilder(Ranch.RanchBuilder.class);
 
 			String rID = results.getString("ranch");
 			builder.identifier(UUID.fromString(rID));
@@ -364,7 +365,7 @@ public class SqlImplementation implements StorageImplementation {
 
 			List<Pen> pens = Lists.newArrayList();
 			while (rs2.next()) {
-				Pen.PenBuilder pb = plugin.getService().getBuilderRegistry().createFor(Pen.PenBuilder.class);
+				Pen.PenBuilder pb = Impactor.getInstance().getRegistry().createBuilder(Pen.PenBuilder.class);
 				pb.identifier(UUID.fromString(rs2.getString(1)));
 				pb.id(rs2.getInt(2));
 

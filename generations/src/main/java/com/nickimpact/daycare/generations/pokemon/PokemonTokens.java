@@ -2,9 +2,7 @@ package com.nickimpact.daycare.generations.pokemon;
 
 import com.google.common.collect.Maps;
 import com.nickimpact.daycare.generations.implementation.GenerationsDaycarePokemonWrapper;
-import com.nickimpact.daycare.sponge.text.TokenHolder;
-import com.nickimpact.daycare.sponge.text.Translator;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
+import com.pixelmongenerations.common.entity.pixelmon.EntityPixelmon;
 import org.spongepowered.api.text.Text;
 
 import java.util.Map;

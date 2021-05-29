@@ -27,9 +27,9 @@ package com.nickimpact.daycare.sponge.configuration;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.nickimpact.impactor.api.configuration.ConfigKey;
-import com.nickimpact.impactor.api.configuration.ConfigKeyHolder;
-import com.nickimpact.impactor.api.configuration.keys.BaseConfigKey;
+import net.impactdev.impactor.api.configuration.ConfigKey;
+import net.impactdev.impactor.api.configuration.ConfigKeyHolder;
+import net.impactdev.impactor.api.configuration.keys.BaseConfigKey;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -38,40 +38,35 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.nickimpact.impactor.api.configuration.ConfigKeyTypes.listKey;
-import static com.nickimpact.impactor.api.configuration.ConfigKeyTypes.stringKey;
+import static net.impactdev.impactor.api.configuration.ConfigKeyTypes.*;
 
-/**
- * (Some note will appear here)
- *
- * @author NickImpact (Nick DeGruccio)
- */
+
 public class MsgConfigKeys implements ConfigKeyHolder {
 
 	// General
 	public static final ConfigKey<String> PLUGIN_PREFIX = stringKey("general.plugin.prefix", "&eDaycare &7\u00bb");
 	public static final ConfigKey<String> PLUGIN_ERROR = stringKey("general.plugin.error-prefix", "&eDaycare &7(&cError&7)");
-	public static final ConfigKey<String> UNLOCK_PEN = stringKey("general.pen.unlock", "{{daycare_prefix}} &7You unlocked &ePen {{pen}} &7for &a{{daycare_price}}&7!");
+	public static final ConfigKey<String> UNLOCK_PEN = stringKey("general.pen.unlock", "{{daycare:prefix}} &7You unlocked &ePen {{daycare:pen_id}} &7for &a{{daycare:pen_price}}&7!");
 	public static final ConfigKey<List<String>> STATISTICS = listKey("general.player.stats", Lists.newArrayList(
-			"&7Eggs Collected: &e{{stats_eggs_collected}}",
-			"&7Eggs Dismissed: &e{{stats_eggs_dismissed}}",
-			"&7Ratio: &e{{stats_eggs_ratio}}"
+			"&7Eggs Collected: &e{{daycare:stats_eggs_collected}}",
+			"&7Eggs Dismissed: &e{{daycare:stats_eggs_dismissed}}",
+			"&7Ratio: &e{{daycare:stats_eggs_ratio}}"
 	));
-	public static final ConfigKey<String> MUST_COLLECT_EGG_FIRST = stringKey("general.pen.must-claim-egg", "{{daycare_error}} &7You must collect the available egg before collecting your pokemon...");
+	public static final ConfigKey<String> MUST_COLLECT_EGG_FIRST = stringKey("general.pen.must-claim-egg", "{{daycare:error}} &7You must collect the available egg before collecting your pokemon...");
 	public static final ConfigKey<List<String>> EVOLVE = listKey("general.ranch.evolve", Lists.newArrayList(
-			"{{daycare_prefix}} &7Your &e{{pokemon_before_evo}} &7has evolved into a &e{{pokemon_after_evo}}&7 after leveling up in the daycare!"
+			"{{daycare:prefix}} &7Your &e{{daycare-reforged:pokemon}} &7has evolved into a &e{{daycare-reforged:evolution}}&7 after leveling up in the daycare!"
 	));
 	public static final ConfigKey<List<String>> LEARN_MOVE = listKey("general.ranch.learn-move", Lists.newArrayList(
-			"{{daycare_prefix}} &7Your &e{{pokemon}} &7leveled up, and ended up learning &e{{pokemon_new_move}}!"
+			"{{daycare:prefix}} &7Your &e{{daycare-reforged:pokemon}} &7leveled up, and ended up learning &e{{daycare-reforged:new_move}}!"
 	));
 	public static final ConfigKey<List<String>> LEARN_MOVE_REPLACE = listKey("general.ranch.learn-move-and-replace-old", Lists.newArrayList(
-			"{{daycare_prefix}} &7Your &e{{pokemon}} &7leveled up, and ended up learning &e{{pokemon_new_move}} &7in replacement of &c{{pokemon_old_move}}&7!"
+			"{{daycare:prefix}} &7Your &e{{daycare-reforged:pokemon}} &7leveled up, and ended up learning &e{{daycare-reforged:new_move}} &7in replacement of &c{{daycare-reforged:old_move}}&7!"
 	));
 	public static final ConfigKey<List<String>> EGGS_AVAILABLE = listKey("general.ranch.eggs-available", Collections.singletonList(
-			"{{daycare_prefix}} &7New eggs are now available in your ranch!"
+			"{{daycare:prefix}} &7New eggs are now available in your ranch!"
 	));
 	public static final ConfigKey<List<String>> NPC_INTERACT_DIALOGUE = listKey("general.npcs.dialogue.start", Lists.newArrayList(
-			"Welcome to the Pokemon Daycare {{player}}!",
+			"Welcome to the Pokemon Daycare {{nucleus:player}}!",
 			"Here, you may leave your pokemon to be leveled up, or even breed some fresh new babies!"
 	));
 	public static final ConfigKey<List<String>> NPC_INTERACT_DIALOGUE_EGGS = listKey("general.npcs.dialogue.eggs-available", Collections.singletonList(
@@ -106,67 +101,68 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 
 	// Commands
 	public static final ConfigKey<String> CMD_NON_PLAYER = stringKey("commands.error.non-player", "{{daycare_error}} &7You must be a player to use this command...");
-	public static final ConfigKey<String> CMD_ADDNPC_RIGHTCLICK_NOTICE = stringKey("commands.addnpc.right-click-notice", "{{daycare_prefix}} &7Right click on a chatting NPC to set them as a Daycare Representative!");
+	public static final ConfigKey<String> CMD_ADDNPC_RIGHTCLICK_NOTICE = stringKey("commands.addnpc.right-click-notice", "{{daycare:prefix}} &7Right click on a chatting NPC to set them as a Daycare Representative!");
 	public static final ConfigKey<String> CMD_REMOVENPC_RIGHTCLICK_NOTICE = stringKey("commands.removenpc.right-click-notice", "{{daycare_prefix}} &7Right click on a registered Daycare NPC to clear their functionality!");
 	public static final ConfigKey<String> CMD_PRICING_NO_ECONOMY_SERVICE = stringKey("commands.pricing.error.no-economy-service", "{{daycare_error}} &7There is no economy service available to perform that action...");
 
 	// Admin
 	public static final ConfigKey<List<String>> NPC_REGISTERED = listKey("admin.npcs.register", Collections.singletonList(
-			"{{daycare_prefix}} &7You've added this NPC as a Daycare Representative!"
+			"{{daycare:prefix}} &7You've added this NPC as a Daycare Representative!"
 	));
 	public static final ConfigKey<List<String>> NPC_DELETED = listKey("admin.npcs.remove", Collections.singletonList(
-			"{{daycare_prefix}} &7You've removed this NPC of its role as a Daycare Representative!"
+			"{{daycare:prefix}} &7You've removed this NPC of its role as a Daycare Representative!"
 	));
 
 	// Pens
-	public static final ConfigKey<String> POKEMON_TITLE_PEN = stringKey("pens.pen-title.pokemon", "&3{{pokemon}} {{shiny:s}}&7| &bLvl {{calced_lvl}}");
-	public static final ConfigKey<String> POKEMON_EGG_TITLE_PEN = stringKey("pens.pen-title.egg", "&3{{pokemon}} Egg{{shiny:p}}");
+	public static final ConfigKey<String> POKEMON_TITLE_PEN = stringKey("pens.pen-title.pokemon", "&3{{daycare-reforged:pokemon}} {{daycare-reforged:shiny:s}}&7| &bLvl {{daycare:calced_lvl}}");
+	public static final ConfigKey<String> POKEMON_EGG_TITLE_PEN = stringKey("pens.pen-title.egg", "&3{{daycare-reforged:pokemon}} Egg{{daycare-reforged:shiny:p}}");
 	public static final ConfigKey<List<String>> POKEMON_LORE_PEN = listKey("pens.pen-lore", Lists.newArrayList(
-			"&7Nickname: &e{{nickname}}",
-			"&7Gained Levels: &e{{gained_lvls}}",
-			"&7Ability: &e{{ability}}",
-			"&7Gender: &e{{gender}}",
-			"&7Nature: &e{{nature}}",
-			"&7Size: &e{{growth}}",
-			"&7Holding: &e{{held_item}}",
+			"&7Nickname: &e{{daycare-reforged:nickname}}",
+			"&7Gained Levels: &e{{daycare:gained_lvls}}",
+			"&7Ability: &e{{daycare-reforged:ability}}",
+			"&7Gender: &e{{daycare-reforged:gender}}",
+			"&7Nature: &e{{daycare-reforged:nature}}",
+			"&7Size: &e{{daycare-reforged:size}}",
+			"&7Holding: &e{{daycare-reforged:held_item}}",
 			"",
-			"&7IVs: &e{{ivs_total}}&7/&e186 &7(&a{{ivs_percent}}&7)",
-			"&7IVs: &e{{ivhp}}&7/&e{{ivatk}}&7/&e{{ivdef}}&7/&e{{ivspatk}}&7/&e{{ivspdef}}&7/&e{{ivspeed}}",
+			"&7IVs: &e{{daycare-reforged:ivs_total}}&7/&e186 &7(&b{{daycare-reforged:iv_percentage}}&7)",
+			"&7IVs: &e{{daycare-reforged:iv_hp}}&7/&e{{daycare-reforged:iv_attack}}&7/&e{{daycare-reforged:iv_defence}}&7/&e{{daycare-reforged:iv_specialattack}}&7/&e{{daycare-reforged:iv_specialdefence}}&7/&e{{daycare-reforged:iv_speed}}",
 			"",
-			"{{breedable}}"
+			"{{daycare-reforged:breedable}}"
 	));
+	public static final ConfigKey<String> POKEMON_TITLE_SELECT = stringKey("pens.select-title.pokemon", "&3{{daycare-reforged:pokemon}} {{daycare-reforged:shiny:s}}&7| &bLvl {{daycare-reforged:level}}");
 	public static final ConfigKey<List<String>> POKEMON_LORE_SELECT = listKey("pens.select-lore", Lists.newArrayList(
-			"&7Nickname: &e{{nickname}}",
-			"&7Ability: &e{{ability}}",
-			"&7Gender: &e{{gender}}",
-			"&7Nature: &e{{nature}}",
-			"&7Size: &e{{growth}}",
-			"&7Holding: &e{{held_item}}",
+			"&7Nickname: &e{{daycare-reforged:nickname}}",
+			"&7Ability: &e{{daycare-reforged:ability}}",
+			"&7Gender: &e{{daycare-reforged:gender}}",
+			"&7Nature: &e{{daycare-reforged:nature}}",
+			"&7Size: &e{{daycare-reforged:size}}",
+			"&7Holding: &e{{daycare-reforged:held_item}}",
 			"",
-			"&7IVs: &e{{ivs_total}}&7/&e186 &7(&a{{ivs_percent}}&7)",
-			"&7IVs: &e{{ivhp}}&7/&e{{ivatk}}&7/&e{{ivdef}}&7/&e{{ivspatk}}&7/&e{{ivspdef}}&7/&e{{ivspeed}}",
+			"&7IVs: &e{{daycare-reforged:ivs_total}}&7/&e186 &7(&b{{daycare-reforged:iv_percentage}}&7)",
+			"&7IVs: &e{{daycare-reforged:iv_hp}}&7/&e{{daycare-reforged:iv_attack}}&7/&e{{daycare-reforged:iv_defence}}&7/&e{{daycare-reforged:iv_specialattack}}&7/&e{{daycare-reforged:iv_specialdefence}}&7/&e{{daycare-reforged:iv_speed}}",
 			"",
-			"{{breedable}}"
+			"{{daycare-reforged:breedable}}"
 	));
-	public static final ConfigKey<String> ADD_POKEMON = stringKey("ui.selection.actions.add-pokemon.success", "{{daycare_prefix}} &7You've added your &e{{pokemon}} &7to the daycare!");
+	public static final ConfigKey<String> ADD_POKEMON = stringKey("ui.selection.actions.add-pokemon.success", "{{daycare:prefix}} &7You've added your &e{{daycare-reforged:pokemon}} &7to the daycare!");
 
 	// Ranch UI
 	public static final ConfigKey<String> RANCH_UI_TITLE = stringKey("ui.main-menu.title", "&cDaycare &7\u00bb &3Main Menu");
 	public static final ConfigKey<String> RANCH_UI_SETTINGS = stringKey("ui.main-menu.settings", "&eSettings");
 	public static final ConfigKey<String> RANCH_UI_STATS = stringKey("ui.main-menu.statistics", "&eStatistics");
-	public static final ConfigKey<String> RANCH_PRICE_TAG = stringKey("ui.main-menu.price-tag", "&7Price: &e{{daycare_price}}");
+	public static final ConfigKey<String> RANCH_PRICE_TAG = stringKey("ui.main-menu.price-tag", "&7Price: &e{{daycare:pen_price}}");
 	public static final ConfigKey<String> RANCH_UI_EGG_AVAILABLE = stringKey("ui.main-menu.pen.egg-available", "&e\u2730 &aEgg Available &e\u2730");
-	public static final ConfigKey<String> RANCH_UI_PEN_ID = stringKey("ui.main-menu.pen.id", "&ePen {{pen_id}}");
-	public static final ConfigKey<String> RANCH_UI_PEN_INFO = stringKey("ui.main-menu.pen.slots", "&7Slot {{slot_id}}&7: &e{{pokemon}} {{gender_icon:s}}&7(&aLvl {{calced_lvl}}&7)");
-	public static final ConfigKey<String> RANCH_UI_PEN_EMPTY = stringKey("ui.main-menu.pen.slot-empty", "&7Slot {{slot_id}}&7: &cEmpty...");
+	public static final ConfigKey<String> RANCH_UI_PEN_ID = stringKey("ui.main-menu.pen.id", "&ePen {{daycare:pen_id}}");
+	public static final ConfigKey<String> RANCH_UI_PEN_INFO = stringKey("ui.main-menu.pen.slots", "&7Slot {{daycare:slot_id}}&7: &e{{daycare-reforged:pokemon}} {{daycare-reforged:gender_icon:s}}&7(&aLvl {{daycare:calced_lvl}}&7)");
+	public static final ConfigKey<String> RANCH_UI_PEN_EMPTY = stringKey("ui.main-menu.pen.slot-empty", "&7Slot {{daycare:slot_id}}&7: &cEmpty...");
 	public static final ConfigKey<List<String>> RANCH_UI_PEN_LOCKED = listKey("ui.main-menu.pen.locked", Lists.newArrayList(
 			"&cCurrently locked...",
 			""
 	));
-	public static final ConfigKey<String> RANCH_UI_PEN_INSUFFICIENT_FUNDS = stringKey("ui.main-menu.pen.insufficient-funds", "{{daycare_error}} &cInsufficient funds...");
+	public static final ConfigKey<String> RANCH_UI_PEN_INSUFFICIENT_FUNDS = stringKey("ui.main-menu.pen.insufficient-funds", "{{daycare:error}} &cInsufficient funds...");
 
 	// Pen UI
-	public static final ConfigKey<String> PEN_UI_TITLE = stringKey("ui.pen.title", "&cDaycare &7\u00bb &3Pen {{pen_id}}");
+	public static final ConfigKey<String> PEN_UI_TITLE = stringKey("ui.pen.title", "&cDaycare &7\u00bb &3Pen {{daycare:pen_id}}");
 	public static final ConfigKey<String> CONFIRM_UI_TITLE = stringKey("ui.pen.title", "&cDaycare &7\u00bb &3Confirm Purchase");
 	public static final ConfigKey<String> PEN_EMPTY_SLOT = stringKey("ui.pen.empty-slot", "&cEmpty &7(Click to Add a Pokemon)");
 	public static final ConfigKey<String> PEN_NO_EGG = stringKey("ui.pen.common.no-egg", "&cNo Egg Available...");
@@ -174,7 +170,7 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 			"&7Click to claim!"
 	));
 	public static final ConfigKey<List<String>> PEN_EGG_CLAIM = listKey("ui.pen.actions.claim-egg", Lists.newArrayList(
-			"{{daycare_prefix}} &7You've collected an egg!"
+			"{{daycare:prefix}} &7You've collected an egg!"
 	));
 	public static final ConfigKey<List<String>> PEN_EGG_DISMISSED = listKey("ui.pen.actions.dismiss-egg", Lists.newArrayList(
 			"{{daycare_prefix}} &7You've allowed the daycare representatives to hold onto the egg!"
@@ -189,15 +185,15 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	));
 
 	// Selection UI
-	public static final ConfigKey<String> SELECT_TITLE = stringKey("ui.selection.title", "&cDaycare &7\u00bb &3{{pokemon}}");
+	public static final ConfigKey<String> SELECT_TITLE = stringKey("ui.selection.title", "&cDaycare &7\u00bb &3{{daycare-reforged:pokemon}}");
 	public static final ConfigKey<List<String>> SELECT_RETRIEVE_PRICE_CHANGE = listKey("ui.selection.actions.retrieve.price-change", Collections.singletonList(
-			"{{daycare_prefix}} &7The price to to retrieve your pokemon has changed recently, make sure you are ok with this new price!"
+			"{{daycare:prefix}} &7The price to to retrieve your pokemon has changed recently, make sure you are ok with this new price!"
 	));
 	public static final ConfigKey<List<String>> SELECT_RETRIEVE = listKey("ui.selection.actions.retrieve.success", Collections.singletonList(
-			"{{daycare_prefix}} &7You've retrieved your &e{{pokemon}} &7for &a{{daycare_price}}&7!"
+			"{{daycare:prefix}} &7You've retrieved your &e{{daycare-reforged:pokemon}} &7for &a{{daycare:claim_price}}&7!"
 	));
 	public static final ConfigKey<List<String>> SELECT_RETRIEVE_EVOLVED = listKey("ui.selection.actions.retrieve.evolved", Collections.singletonList(
-			"{{daycare_prefix}} &7Whilst you were making your decision, your &e{{pokemon_old}} &7evolved into &e{{pokemon}}&7!"
+			"{{daycare:prefix}} &7Whilst you were making your decision, your &e{{pokemon_old}} &7evolved into &e{{pokemon}}&7!"
 	));
 
 	// Party UI
@@ -239,7 +235,7 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 			"&7be enabled!"
 	));
 	public static final ConfigKey<List<String>> SETTINGS_APPLY = listKey("ui.settings.apply-changes", Lists.newArrayList(
-			"{{daycare_prefix}} &7Settings applied!"
+			"{{daycare:prefix}} &7Settings applied!"
 	));
 
 	public static final ConfigKey<String> TRANSLATIONS_YES = stringKey("translations.yes", "Yes");
@@ -253,16 +249,16 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 	public static final ConfigKey<String> CANCEL = stringKey("ui.common.cancel", "&cCancel");
 
 	public static final ConfigKey<List<String>> CONFIRM_PEN_DETAILS = listKey("ui.confirm.pen-details", Lists.newArrayList(
-			"&7Price to Unlock: &e{{daycare_price}}"
+			"&7Price to Unlock: &e{{daycare:pen_price}}"
 	));
 	public static final ConfigKey<List<String>> CONFIRM_PEN_BUTTON = listKey("ui.confirm.button", Lists.newArrayList(
 			"&7By clicking here, you agree to",
-			"&7pay the price of: &e{{daycare_price}}"
+			"&7pay the price of: &e{{daycare:pen_price}}"
 	));
 	public static final ConfigKey<List<String>> CONFIRM_RETRIEVAL_POKEMON = listKey("ui.confirm.retrieve-pokemon", Lists.newArrayList(
 			"&7By clicking here, you agree to",
-			"&7pay the price of &e{{daycare_price}}",
-			"&7in order to retrieve your &a{{pokemon}}"
+			"&7pay the price of &e{{daycare:claim_price}}",
+			"&7in order to retrieve your &a{{daycare-reforged:pokemon}}"
 	));
 
 	public static final ConfigKey<String> BREED_STAGES_NOT_REACHED = stringKey("ui.pen.breed-stage.not-reached", "&cNot yet achieved...");
@@ -287,7 +283,7 @@ public class MsgConfigKeys implements ConfigKeyHolder {
 			"&7a little romantic..."
 	));
 	public static final ConfigKey<String> ITEM_BACK = stringKey("ui.common.items.back.title", "&c\u2190 Go Back \u2190");
-	public static final ConfigKey<String> LAST_NON_EGG = stringKey("ui.pens.deposit.last-non-egg", "{{daycare_error}} You can't deposit your last non-egg party member!");
+	public static final ConfigKey<String> LAST_NON_EGG = stringKey("ui.pens.deposit.last-non-egg", "{{daycare:error}} You can't deposit your last non-egg party member!");
 
 
 	public static final ConfigKey<String> SOCIALIZING = stringKey("ui.pen..breed-stage.socializing.title", "Socializing");

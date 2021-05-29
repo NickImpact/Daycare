@@ -6,7 +6,6 @@ import com.nickimpact.daycare.api.manager.NPCManager;
 import com.nickimpact.daycare.api.manager.RanchManager;
 import com.nickimpact.daycare.api.pens.PenUnlockModule;
 import com.nickimpact.daycare.api.storage.IDaycareStorage;
-import com.nickimpact.impactor.api.registry.BuilderRegistry;
 import lombok.Setter;
 
 import java.util.Map;
@@ -19,8 +18,6 @@ public class SpongeDaycareService implements DaycareService {
 
 	@Setter private PenUnlockModule module;
 	private Map<String, PenUnlockModule> unlockers = Maps.newHashMap();
-
-	private BuilderRegistry builders = new BuilderRegistry();
 
 	@Override
 	public IDaycareStorage getStorage() {
@@ -60,11 +57,6 @@ public class SpongeDaycareService implements DaycareService {
 
 		this.unlockers.put(key, module);
 		return true;
-	}
-
-	@Override
-	public BuilderRegistry getBuilderRegistry() {
-		return this.builders;
 	}
 
 }

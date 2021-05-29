@@ -39,7 +39,7 @@ dependencies {
     shadow "org.spigotmc:spigot:1.12.2-R0.1-SNAPSHOT"
     shadow "org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT"
     shadow "net.milkbowl.vault:VaultAPI:1.7"
-    shadow 'reforged:server:7.2.1@Pixelmon-1.12.2-7.2.1-server.jar'
+    shadow 'reforged:server:8.1.2@Pixelmon-1.12.2-8.1.2-server.jar'
     shadow "co.aikar:acf-paper:0.5.0-SNAPSHOT"
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

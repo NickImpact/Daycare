@@ -5,9 +5,9 @@ import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Settings;
 import com.nickimpact.daycare.sponge.implementation.SpongePen;
-import com.pixelmonmod.pixelmon.config.PixelmonEntityList;
-import com.pixelmonmod.pixelmon.entities.pixelmon.Entity10CanBreed;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
+import com.pixelmongenerations.common.entity.pixelmon.Entity10CanBreed;
+import com.pixelmongenerations.common.entity.pixelmon.EntityPixelmon;
+import com.pixelmongenerations.core.config.PixelmonEntityList;
 import net.minecraft.world.World;
 import org.spongepowered.api.Sponge;
 

@@ -2,7 +2,7 @@ package com.nickimpact.daycare.common.storage.implementation;
 
 import com.nickimpact.daycare.api.pens.DaycareNPC;
 import com.nickimpact.daycare.api.pens.Ranch;
-import com.nickimpact.impactor.api.plugin.ImpactorPlugin;
+import net.impactdev.impactor.api.plugin.ImpactorPlugin;
 
 import java.util.*;
 

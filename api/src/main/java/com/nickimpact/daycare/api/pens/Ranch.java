@@ -3,7 +3,8 @@ package com.nickimpact.daycare.api.pens;
 import com.google.common.collect.Lists;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.api.util.PluginInstance;
-import com.nickimpact.impactor.api.building.Builder;
+import net.impactdev.impactor.api.Impactor;
+import net.impactdev.impactor.api.utilities.Builder;
 
 import java.util.List;
 import java.util.UUID;
@@ -83,10 +84,10 @@ public abstract class Ranch<T extends Pen> {
 	}
 
 	public static RanchBuilder builder() {
-		return PluginInstance.getPlugin().getService().getBuilderRegistry().createFor(RanchBuilder.class);
+		return Impactor.getInstance().getRegistry().createBuilder(RanchBuilder.class);
 	}
 
-	public interface RanchBuilder extends Builder<Ranch> {
+	public interface RanchBuilder extends Builder<Ranch, RanchBuilder> {
 
 		RanchBuilder identifier(UUID identifier);
 

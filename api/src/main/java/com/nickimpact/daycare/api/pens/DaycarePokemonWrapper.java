@@ -1,8 +1,8 @@
 package com.nickimpact.daycare.api.pens;
 
 import com.nickimpact.daycare.api.util.GsonUtils;
-import com.nickimpact.daycare.api.util.PluginInstance;
-import com.nickimpact.impactor.api.building.Builder;
+import net.impactdev.impactor.api.Impactor;
+import net.impactdev.impactor.api.utilities.Builder;
 import net.minecraft.nbt.NBTTagCompound;
 
 import java.time.LocalDateTime;
@@ -72,10 +72,10 @@ public abstract class DaycarePokemonWrapper<T> {
 	public abstract boolean learnMove(Ranch ranch, Pen pen);
 
 	public static DaycarePokemonWrapperBuilder builder() {
-		return PluginInstance.getPlugin().getService().getBuilderRegistry().createFor(DaycarePokemonWrapperBuilder.class);
+		return Impactor.getInstance().getRegistry().createBuilder(DaycarePokemonWrapperBuilder.class);
 	}
 
-	public interface DaycarePokemonWrapperBuilder extends Builder<DaycarePokemonWrapper> {
+	public interface DaycarePokemonWrapperBuilder extends Builder<DaycarePokemonWrapper, DaycarePokemonWrapperBuilder> {
 
 		DaycarePokemonWrapperBuilder json(String json);
 

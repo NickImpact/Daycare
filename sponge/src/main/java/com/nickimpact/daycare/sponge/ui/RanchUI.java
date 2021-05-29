@@ -7,11 +7,11 @@ import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.sponge.implementation.SpongePen;
 import com.nickimpact.daycare.sponge.implementation.SpongeRanch;
-import com.nickimpact.daycare.sponge.text.TextParsingUtils;
 import com.nickimpact.daycare.sponge.utils.SpongeItemTypeUtil;
-import com.nickimpact.impactor.sponge.ui.SpongeIcon;
-import com.nickimpact.impactor.sponge.ui.SpongeLayout;
-import com.nickimpact.impactor.sponge.ui.SpongePage;
+import com.nickimpact.daycare.sponge.utils.TextParser;
+import net.impactdev.impactor.sponge.ui.SpongeIcon;
+import net.impactdev.impactor.sponge.ui.SpongeLayout;
+import net.impactdev.impactor.sponge.ui.SpongePage;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class RanchUI {
 
@@ -51,10 +52,8 @@ public class RanchUI {
 	}
 
 	private SpongePage<SpongePen> createPage() {
-		TextParsingUtils parser = SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils();
-
 		SpongePage.SpongePageBuilder spb = SpongePage.builder();
-		spb.title(Text.of(parser.parse(SpongeDaycarePlugin.getSpongeInstance().getMsgConfig().get(MsgConfigKeys.RANCH_UI_TITLE), this.viewer, null, null)));
+		spb.title(TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_TITLE)));
 		spb.contentZone(InventoryDimension.of(7, 3));
 		spb.offsets(1);
 		spb.lastPage(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:trade_holder_left"), 50);
@@ -72,28 +71,24 @@ public class RanchUI {
 	}
 
 	private SpongeIcon createPenIcon(SpongePen pen, int index) {
-		TextParsingUtils parser = SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils();
-
-		Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-		tokens.put("pen_id", src -> Optional.of(Text.of(index)));
-		tokens.put("daycare_price", src -> Optional.of(Text.of(SpongeDaycarePlugin.getSpongeInstance().getService().getActiveModule().getRequirement(index - 1))));
-
-		Map<String, Object> variables = Maps.newHashMap();
-		variables.put("pen", pen);
+		List<Supplier<Object>> sources = Lists.newArrayList();
+		sources.add(() -> index);
+		sources.add(() -> SpongeDaycarePlugin.getSpongeInstance().getService().getActiveModule().getRequirement(index - 1));
+		sources.add(() -> pen);
 
 		if(pen.isUnlocked()) {
 			List<Text> lore = Lists.newArrayList();
-			lore.add(this.forSlot(pen, parser, 1));
-			lore.add(this.forSlot(pen, parser, 2));
+			lore.add(this.forSlot(pen, 1));
+			lore.add(this.forSlot(pen, 2));
 
 			if(pen.getEgg().isPresent()) {
 				lore.add(Text.EMPTY);
-				lore.add(parser.fetchAndParseMsg(viewer, MsgConfigKeys.RANCH_UI_EGG_AVAILABLE, tokens, variables));
+				lore.add(TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_EGG_AVAILABLE), sources));
 			}
 
 			ItemStack display = ItemStack.builder()
 					.itemType(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:ranch"))
-					.add(Keys.DISPLAY_NAME, parser.fetchAndParseMsg(viewer, MsgConfigKeys.RANCH_UI_PEN_ID, tokens, variables))
+					.add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_PEN_ID), sources))
 					.add(Keys.ITEM_LORE, lore)
 					.build();
 
@@ -104,12 +99,12 @@ public class RanchUI {
 			return icon;
 		} else {
 			List<Text> lore = Lists.newArrayList();
-			lore.addAll(parser.fetchAndParseMsgs(this.viewer, MsgConfigKeys.RANCH_UI_PEN_LOCKED, tokens, variables));
-			lore.add(Text.of(parser.fetchAndParseMsg(this.viewer, MsgConfigKeys.RANCH_PRICE_TAG, tokens, variables)));
+			lore.addAll(TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_PEN_LOCKED), sources));
+			lore.add(TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_PRICE_TAG), sources));
 
 			ItemStack display = ItemStack.builder()
 					.itemType(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:ranch"))
-					.add(Keys.DISPLAY_NAME, parser.fetchAndParseMsg(viewer, MsgConfigKeys.RANCH_UI_PEN_ID, tokens, variables))
+					.add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_PEN_ID), sources))
 					.add(Keys.ITEM_LORE, lore)
 					.build();
 			SpongeIcon icon = new SpongeIcon(display);
@@ -120,18 +115,17 @@ public class RanchUI {
 		}
 	}
 
-	private Text forSlot(SpongePen pen, TextParsingUtils parser, int slot) {
-		Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-		tokens.put("slot_id", src -> Optional.of(Text.of(slot)));
+	private Text forSlot(SpongePen pen, int slot) {
+		List<Supplier<Object>> sources = Lists.newArrayList();
+		sources.add(() -> slot);
 
 		if (pen.getAtPosition(slot).isPresent()) {
-			Map<String, Object> variables = Maps.newHashMap();
-			variables.put("wrapper", pen.getAtPosition(slot).orElse(null));
-			variables.put("pokemon", ((DaycarePokemonWrapper) pen.getAtPosition(slot).get()).getDelegate());
+			sources.add(() -> pen.getAtPosition(slot).orElse(null));
+			sources.add(() -> ((DaycarePokemonWrapper) pen.getAtPosition(slot).get()).getDelegate());
 
-			return parser.fetchAndParseMsg(this.viewer, MsgConfigKeys.RANCH_UI_PEN_INFO, tokens, variables);
+			return TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_PEN_INFO), sources);
 		} else {
-			return parser.fetchAndParseMsg(this.viewer, MsgConfigKeys.RANCH_UI_PEN_EMPTY, tokens, null);
+			return TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_PEN_EMPTY), sources);
 		}
 	}
 }

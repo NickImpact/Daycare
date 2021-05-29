@@ -4,16 +4,15 @@ import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
 import com.nickimpact.impactor.api.configuration.Config;
-import com.pixelmonmod.pixelmon.battles.attacks.specialAttacks.basic.HiddenPower;
-import com.pixelmonmod.pixelmon.entities.pixelmon.Entity4Textures;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.EVsStore;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.IVStore;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.StatsType;
-import com.pixelmonmod.pixelmon.entities.pixelmon.textures.IEnumSpecialTexture;
-import com.pixelmonmod.pixelmon.enums.EnumPokemon;
-import com.pixelmonmod.pixelmon.storage.NbtKeys;
+import com.pixelmongenerations.common.battle.attacks.specialAttacks.basic.HiddenPower;
+import com.pixelmongenerations.common.entity.pixelmon.Entity4Textures;
+import com.pixelmongenerations.common.entity.pixelmon.EntityPixelmon;
+import com.pixelmongenerations.common.entity.pixelmon.stats.EVsStore;
+import com.pixelmongenerations.common.entity.pixelmon.stats.Gender;
+import com.pixelmongenerations.common.entity.pixelmon.stats.IVStore;
+import com.pixelmongenerations.common.entity.pixelmon.stats.StatsType;
+import com.pixelmongenerations.core.enums.EnumSpecies;
+import com.pixelmongenerations.core.storage.NbtKeys;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -52,7 +51,7 @@ public enum EnumPokemonFields {
 		}
 	}),
 	SHINY(pokemon -> {
-		if(!pokemon.getIsShiny())
+		if(!pokemon.isShiny())
 			return Text.EMPTY;
 
 		return Text.of(TextColors.GRAY, "(", TextColors.GOLD, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, MsgConfigKeys.SHINY_TRANSLATION, null, null), TextColors.GRAY, ")");
@@ -76,7 +75,7 @@ public enum EnumPokemonFields {
 		}
 	}),
 	CLONES(pokemon -> {
-		if(pokemon.getSpecies().equals(EnumPokemon.Mew)) {
+		if(pokemon.getSpecies().equals(EnumSpecies.Mew)) {
 			NBTTagCompound nbt = new NBTTagCompound();
 			pokemon.writeToNBT(nbt);
 			return nbt.getShort(NbtKeys.STATS_NUM_CLONED);
@@ -142,7 +141,7 @@ public enum EnumPokemonFields {
 			return texture;
 		}
 
-		return pokemon.getIsShiny() ? SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, SpongeDaycarePlugin.getSpongeInstance().getMsgConfig(), MsgConfigKeys.SHINY_TRANSLATION, null, null).toPlain() : "";
+		return pokemon.isShiny() ? SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, SpongeDaycarePlugin.getSpongeInstance().getMsgConfig(), MsgConfigKeys.SHINY_TRANSLATION, null, null).toPlain() : "";
 	}),
 	SPECIAL_TEXTURE(Entity4Textures::getSpecialTexture),
 	HIDDEN_POWER(pokemon -> HiddenPower.getHiddenPowerType(pokemon.stats.IVs).name()),
@@ -150,7 +149,7 @@ public enum EnumPokemonFields {
 	MOVES_2(pokemon -> pokemon.getMoveset().attacks[1].baseAttack.getLocalizedName()),
 	MOVES_3(pokemon -> pokemon.getMoveset().attacks[2].baseAttack.getLocalizedName()),
 	MOVES_4(pokemon -> pokemon.getMoveset().attacks[3].baseAttack.getLocalizedName()),
-	SHINY_STATE(pokemon -> SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, pokemon.getIsShiny() ? MsgConfigKeys.TRANSLATIONS_YES : MsgConfigKeys.TRANSLATIONS_NO, null, null)),
+	SHINY_STATE(pokemon -> SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, pokemon.isShiny() ? MsgConfigKeys.TRANSLATIONS_YES : MsgConfigKeys.TRANSLATIONS_NO, null, null)),
 //	POKERUS_STATE(pokemon -> pokemon.getPokerus().isPresent() ? "Yes" : "No"),
 //	POKERUS(pokemon -> pokemon.getPokerus().isPresent() ? "PKRS" : null),
 	UNBREEDABLE(pokemon -> {

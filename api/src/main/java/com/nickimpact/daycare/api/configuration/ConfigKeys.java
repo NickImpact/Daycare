@@ -26,17 +26,17 @@
 package com.nickimpact.daycare.api.configuration;
 
 import com.google.common.collect.ImmutableMap;
-import com.nickimpact.impactor.api.configuration.ConfigKey;
-import com.nickimpact.impactor.api.configuration.ConfigKeyHolder;
-import com.nickimpact.impactor.api.configuration.keys.BaseConfigKey;
-import com.nickimpact.impactor.api.storage.StorageCredentials;
+import net.impactdev.impactor.api.configuration.ConfigKey;
+import net.impactdev.impactor.api.configuration.ConfigKeyHolder;
+import net.impactdev.impactor.api.configuration.keys.BaseConfigKey;
+import net.impactdev.impactor.api.storage.StorageCredentials;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.nickimpact.impactor.api.configuration.ConfigKeyTypes.*;
+import static net.impactdev.impactor.api.configuration.ConfigKeyTypes.*;
 
 public class ConfigKeys implements ConfigKeyHolder {
 

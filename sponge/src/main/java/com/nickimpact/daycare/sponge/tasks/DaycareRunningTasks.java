@@ -10,6 +10,7 @@ import com.nickimpact.daycare.sponge.implementation.SpongePen;
 import com.nickimpact.daycare.sponge.implementation.SpongeRanch;
 import com.nickimpact.daycare.sponge.observing.PenObservers;
 import com.nickimpact.daycare.sponge.ui.PenUI;
+import com.nickimpact.daycare.sponge.utils.TextParser;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 
@@ -77,7 +78,7 @@ public class DaycareRunningTasks {
 			dpw.createEgg(ranch, pen);
 		});
 		Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> {
-			player.sendMessages(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(player, MsgConfigKeys.EGGS_AVAILABLE, null, null));
+			player.sendMessages(TextParser.parse(TextParser.read(MsgConfigKeys.EGGS_AVAILABLE)));
 		});
 		SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(ranch);
 		pen.resetEggTimer();

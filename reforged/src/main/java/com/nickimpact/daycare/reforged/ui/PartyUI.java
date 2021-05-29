@@ -1,28 +1,30 @@
 package com.nickimpact.daycare.reforged.ui;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
+import com.google.gson.reflect.TypeToken;
+import com.nickimpact.daycare.api.events.DaycareEvent;
+import com.nickimpact.daycare.reforged.implementation.ReforgedDaycarePokemonWrapper;
 import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.sponge.implementation.SpongeRanch;
 import com.nickimpact.daycare.reforged.implementation.ReforgedPen;
 import com.nickimpact.daycare.sponge.ui.common.CommonUIComponents;
 import com.nickimpact.daycare.sponge.utils.SpongeItemTypeUtil;
-import com.nickimpact.impactor.sponge.ui.SpongeIcon;
-import com.nickimpact.impactor.sponge.ui.SpongeLayout;
-import com.nickimpact.impactor.sponge.ui.SpongeUI;
+import com.nickimpact.daycare.sponge.utils.TextParser;
 import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
-import org.spongepowered.api.command.CommandSource;
+import net.impactdev.impactor.api.Impactor;
+import net.impactdev.impactor.sponge.ui.SpongeIcon;
+import net.impactdev.impactor.sponge.ui.SpongeLayout;
+import net.impactdev.impactor.sponge.ui.SpongeUI;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
-import org.spongepowered.api.text.Text;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.List;
+import java.util.function.Supplier;
 
 public class PartyUI {
 
@@ -52,7 +54,7 @@ public class PartyUI {
 
 	private SpongeUI createDisplay() {
 		return SpongeUI.builder()
-				.title(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.PARTY_TITLE, null, null))
+				.title(TextParser.parse(TextParser.read(MsgConfigKeys.PARTY_TITLE)))
 				.dimension(InventoryDimension.of(9, 3))
 				.build().define(this.design());
 	}
@@ -66,27 +68,32 @@ public class PartyUI {
 			Pokemon pokemon = this.party.get(i - 10);
 			if(pokemon == null) continue;
 
-			Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-			tokens.put("calced_lvl", src -> Optional.of(Text.of(pokemon.getLevel())));
-
-			Map<String, Object> variables = Maps.newHashMap();
-			variables.put("poke", pokemon);
+			List<Supplier<Object>> sources = Lists.newArrayList();
+			sources.add(pokemon::getLevel);
+			sources.add(() -> pokemon);
 
 			ItemStack display = CommonUIComponents.pokemonDisplay(pokemon);
-			display.offer(Keys.DISPLAY_NAME, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.POKEMON_TITLE_PEN, tokens, variables));
-			display.offer(Keys.ITEM_LORE, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(this.viewer, MsgConfigKeys.POKEMON_LORE_SELECT, tokens, variables));
+			display.offer(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.POKEMON_TITLE_SELECT), sources));
+			display.offer(Keys.ITEM_LORE, TextParser.parse(TextParser.read(MsgConfigKeys.POKEMON_LORE_SELECT), sources));
 			SpongeIcon icon = new SpongeIcon(display);
 			if(!pokemon.isEgg()) {
 				icon.addListener(clickable -> {
 					this.display.close(this.viewer);
 
 					if(this.party.getTeam().size() != 1) {
+						Impactor.getInstance().getEventBus().post(
+								DaycareEvent.AddPokemon.class,
+								new TypeToken<Pokemon>(){},
+								this.viewer.getUniqueId(),
+								this.pen,
+								pokemon
+						);
 						this.pen.addAtSlot(pokemon, slot);
 						this.party.set(this.party.getPosition(pokemon), null);
 						SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(this.ranch);
-						this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.ADD_POKEMON, tokens, variables));
+						this.viewer.sendMessage(TextParser.parse(TextParser.read(MsgConfigKeys.ADD_POKEMON), sources));
 					} else {
-						this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.LAST_NON_EGG, tokens, variables));
+						this.viewer.sendMessage(TextParser.parse(TextParser.read(MsgConfigKeys.LAST_NON_EGG), sources));
 					}
 				});
 			}
@@ -95,7 +102,7 @@ public class PartyUI {
 
 		ItemStack pc = ItemStack.builder()
 				.itemType(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:pc"))
-				.add(Keys.DISPLAY_NAME, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.PARTY_PC, null, null))
+				.add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.PARTY_PC)))
 				.build();
 		SpongeIcon icon = new SpongeIcon(pc);
 		icon.addListener(clickable -> {

@@ -1,7 +1,6 @@
 package com.nickimpact.daycare.sponge.ui;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
 import com.nickimpact.daycare.api.pens.PenUnlockModule;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
@@ -9,20 +8,17 @@ import com.nickimpact.daycare.sponge.implementation.SpongePen;
 import com.nickimpact.daycare.sponge.implementation.SpongeRanch;
 import com.nickimpact.daycare.sponge.ui.common.CommonUIComponents;
 import com.nickimpact.daycare.sponge.utils.SpongeItemTypeUtil;
-import com.nickimpact.impactor.sponge.ui.SpongeIcon;
-import com.nickimpact.impactor.sponge.ui.SpongeLayout;
-import com.nickimpact.impactor.sponge.ui.SpongeUI;
-import org.spongepowered.api.command.CommandSource;
+import com.nickimpact.daycare.sponge.utils.TextParser;
+import net.impactdev.impactor.sponge.ui.SpongeIcon;
+import net.impactdev.impactor.sponge.ui.SpongeLayout;
+import net.impactdev.impactor.sponge.ui.SpongeUI;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
-import org.spongepowered.api.text.Text;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ConfirmationUI {
 
@@ -46,28 +42,28 @@ public class ConfirmationUI {
 
 	private SpongeUI createUI() {
 		SpongeUI.SpongeUIBuilder sb = SpongeUI.builder();
-		sb.title(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.CONFIRM_UI_TITLE, null, null));
+		sb.title(TextParser.parse(TextParser.read(MsgConfigKeys.CONFIRM_UI_TITLE)));
 		sb.dimension(InventoryDimension.of(9, 6));
 		return sb.build().define(this.layout());
 	}
 
 	private SpongeLayout layout() {
 		PenUnlockModule module = SpongeDaycarePlugin.getSpongeInstance().getService().getActiveModule();
-		Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-		tokens.put("daycare_price", src -> Optional.of(Text.of(module.getRequirement(this.index - 1))));
-		tokens.put("pen", src -> Optional.of(Text.of(this.index)));
+		List<Supplier<Object>> sources = Lists.newArrayList();
+		sources.add(() -> index);
+		sources.add(() -> module.getRequirement(index - 1));
 
 		return CommonUIComponents.confirmBase(
 				this.drawPen(),
 				new CommonUIComponents.CommonConfirmComponent(
-						SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(this.viewer, MsgConfigKeys.CONFIRM_PEN_BUTTON, tokens, null),
+						TextParser.parse(TextParser.read(MsgConfigKeys.CONFIRM_PEN_BUTTON), sources),
 						(player, event) -> {
 							this.display.close(player);
 							if(ranch.unlock(this.index - 1)) {
 								SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(this.ranch);
-								this.viewer.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.UNLOCK_PEN, tokens, null));
+								this.viewer.sendMessage(TextParser.parse(TextParser.read(MsgConfigKeys.UNLOCK_PEN), sources));
 							} else {
-								player.sendMessages(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(player, MsgConfigKeys.RANCH_UI_PEN_INSUFFICIENT_FUNDS, tokens, null));
+								player.sendMessages(TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_PEN_INSUFFICIENT_FUNDS), sources));
 							}
 						}
 				),
@@ -76,19 +72,17 @@ public class ConfirmationUI {
 	}
 
 	private SpongeIcon drawPen() {
-		Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-		tokens.put("pen_id", src -> Optional.of(Text.of(index)));
-		tokens.put("daycare_price", src -> Optional.of(Text.of(SpongeDaycarePlugin.getSpongeInstance().getService().getActiveModule().getRequirement(index - 1))));
+		List<Supplier<Object>> sources = Lists.newArrayList();
+		sources.add(() -> index);
+		sources.add(() -> SpongeDaycarePlugin.getSpongeInstance().getService().getActiveModule().getRequirement(index - 1));
 
 		List<String> lore = Lists.newArrayList();
 		lore.addAll(SpongeDaycarePlugin.getSpongeInstance().getMsgConfig().get(MsgConfigKeys.CONFIRM_PEN_DETAILS));
 
 		return new SpongeIcon(ItemStack.builder()
 				.itemType(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:ranch"))
-				.add(Keys.DISPLAY_NAME, Text.of(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(
-						this.viewer, MsgConfigKeys.RANCH_UI_PEN_ID, tokens, null
-				)))
-				.add(Keys.ITEM_LORE, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().parse(lore, this.viewer, tokens, null))
+				.add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.RANCH_UI_PEN_ID), sources))
+				.add(Keys.ITEM_LORE, TextParser.parse(lore, sources))
 				.build()
 		);
 	}

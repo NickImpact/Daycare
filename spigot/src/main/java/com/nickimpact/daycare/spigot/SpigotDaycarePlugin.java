@@ -2,6 +2,7 @@ package com.nickimpact.daycare.spigot;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.PaperCommandManager;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,7 +15,6 @@ import com.nickimpact.daycare.api.pens.Ranch;
 import com.nickimpact.daycare.api.util.GsonUtils;
 import com.nickimpact.daycare.api.util.PluginInstance;
 import com.nickimpact.daycare.spigot.commands.DaycareCmd;
-import com.nickimpact.daycare.common.DaycarePluginInfo;
 import com.nickimpact.daycare.common.json.PenAdapter;
 import com.nickimpact.daycare.common.json.PokemonWrapperAdapter;
 import com.nickimpact.daycare.common.json.RanchAdapter;
@@ -33,8 +33,10 @@ import com.nickimpact.impactor.api.platform.Platform;
 import com.nickimpact.impactor.api.plugin.ImpactorPlugin;
 import com.nickimpact.impactor.api.plugin.PluginInfo;
 import com.nickimpact.impactor.api.storage.StorageType;
+import com.nickimpact.impactor.api.storage.dependencies.Dependency;
 import com.nickimpact.impactor.api.storage.dependencies.DependencyManager;
 import com.nickimpact.impactor.api.storage.dependencies.classloader.PluginClassLoader;
+import com.nickimpact.impactor.api.storage.dependencies.classloader.ReflectionClassLoader;
 import com.nickimpact.impactor.spigot.SpigotImpactorPlugin;
 import com.nickimpact.impactor.spigot.configuration.SpigotConfig;
 import com.nickimpact.impactor.spigot.configuration.SpigotConfigAdapter;
@@ -48,6 +50,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -69,6 +72,9 @@ public class SpigotDaycarePlugin extends JavaPlugin implements IDaycarePlugin {
     private PaperCommandManager cmdManager;
 
     private ScheduledExecutorService asyncExecutor;
+
+    private PluginClassLoader loader;
+    private DependencyManager manager;
 
     @Getter @Setter
     private Economy economy;
@@ -119,6 +125,13 @@ public class SpigotDaycarePlugin extends JavaPlugin implements IDaycarePlugin {
         this.configDir = this.getDataFolder().toPath();
         this.config = new SpigotConfig(new SpigotConfigAdapter(this, new File(this.getConfigDir().toFile(), "daycare.conf")), new ConfigKeys());
 
+        this.loader = new ReflectionClassLoader(this);
+        this.manager = new DependencyManager(this);
+        this.manager.loadDependencies(EnumSet.of(Dependency.CONFIGURATE_CORE, Dependency.CONFIGURATE_HOCON, Dependency.HOCON_CONFIG, Dependency.CONFIGURATE_GSON, Dependency.CONFIGURATE_YAML));
+
+        StorageType st = StorageType.parse(this.config.get(ConfigKeys.STORAGE_METHOD));
+        this.manager.loadStorageDependencies(ImmutableSet.of(st != null ? st : StorageType.H2));
+
         this.getService().setActiveModule(this.getConfiguration().get(ConfigKeys.RANCH_UNLOCK_MODULE));
 
         this.getPluginLogger().info("Caching economy service...");
@@ -165,17 +178,17 @@ public class SpigotDaycarePlugin extends JavaPlugin implements IDaycarePlugin {
 
     @Override
     public PluginClassLoader getPluginClassLoader() {
-        return SpigotImpactorPlugin.getInstance().getPluginClassLoader();
+        return this.loader;
     }
 
     @Override
     public DependencyManager getDependencyManager() {
-        return SpigotImpactorPlugin.getInstance().getDependencyManager();
+        return this.manager;
     }
 
     @Override
     public List<StorageType> getStorageTypes() {
-        return null;
+        return Lists.newArrayList();
     }
 
     @Override

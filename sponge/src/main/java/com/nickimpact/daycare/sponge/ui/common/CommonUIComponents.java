@@ -2,18 +2,15 @@ package com.nickimpact.daycare.sponge.ui.common;
 
 import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
-import com.nickimpact.impactor.sponge.ui.SpongeIcon;
-import com.nickimpact.impactor.sponge.ui.SpongeLayout;
+import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EnumSpecialTexture;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
-import com.pixelmonmod.pixelmon.enums.forms.EnumGreninja;
-import com.pixelmonmod.pixelmon.enums.forms.EnumNoForm;
-import com.pixelmonmod.pixelmon.enums.forms.IEnumForm;
+import com.pixelmonmod.pixelmon.items.ItemPixelmonSprite;
 import com.pixelmonmod.pixelmon.storage.NbtKeys;
 import lombok.AllArgsConstructor;
+import net.impactdev.impactor.sponge.ui.SpongeIcon;
+import net.impactdev.impactor.sponge.ui.SpongeLayout;
 import net.minecraft.nbt.NBTTagCompound;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
@@ -24,6 +21,7 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.serializer.TextSerializers;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -56,50 +54,30 @@ public class CommonUIComponents {
     }
 
     public static ItemStack pokemonDisplay(Pokemon pokemon) {
-        net.minecraft.item.ItemStack nativeItem = new net.minecraft.item.ItemStack(PixelmonItems.itemPixelmonSprite);
-        NBTTagCompound nbt = new NBTTagCompound();
-        String idValue = String.format("%03d", pokemon.getBaseStats().nationalPokedexNumber);
-        if (pokemon.isEgg()) {
-            switch(pokemon.getSpecies()) {
+        Calendar calendar = Calendar.getInstance();
+        boolean aprilFools = false;
+        if(calendar.get(Calendar.MONTH) == Calendar.APRIL && calendar.get(Calendar.DAY_OF_MONTH) == 1) {
+            aprilFools = true;
+        }
+
+        if(pokemon.isEgg()) {
+            net.minecraft.item.ItemStack item = new net.minecraft.item.ItemStack(PixelmonItems.itemPixelmonSprite);
+            NBTTagCompound nbt = new NBTTagCompound();
+            switch (pokemon.getSpecies()) {
                 case Manaphy:
-                    nbt.setString(NbtKeys.SPRITE_NAME, "pixelmon:sprites/eggs/manaphy1");
-                    break;
                 case Togepi:
-                    nbt.setString(NbtKeys.SPRITE_NAME, "pixelmon:sprites/eggs/togepi1");
+                    nbt.setString(NbtKeys.SPRITE_NAME,
+                            String.format("pixelmon:sprites/eggs/%s1", pokemon.getSpecies().name.toLowerCase()));
                     break;
                 default:
                     nbt.setString(NbtKeys.SPRITE_NAME, "pixelmon:sprites/eggs/egg1");
                     break;
             }
+            item.setTagCompound(nbt);
+            return (ItemStack) (Object) item;
         } else {
-            if (pokemon.isShiny()) {
-                nbt.setString(NbtKeys.SPRITE_NAME, "pixelmon:sprites/shinypokemon/" + idValue + getSpriteExtraProperly(pokemon.getSpecies(), pokemon.getFormEnum(), pokemon.getGender(), pokemon.getSpecialTexture()));
-            } else {
-                nbt.setString(NbtKeys.SPRITE_NAME, "pixelmon:sprites/pokemon/" + idValue + getSpriteExtraProperly(pokemon.getSpecies(), pokemon.getFormEnum(), pokemon.getGender(), pokemon.getSpecialTexture()));
-            }
+            return (ItemStack) (Object) (aprilFools ? ItemPixelmonSprite.getPhoto(Pixelmon.pokemonFactory.create(EnumSpecies.Bidoof)) : ItemPixelmonSprite.getPhoto(pokemon));
         }
-        nativeItem.setTagCompound(nbt);
-        return (ItemStack) (Object) (nativeItem);
-    }
-
-    private static String getSpriteExtraProperly(EnumSpecies species, IEnumForm form, Gender gender, EnumSpecialTexture specialTexture) {
-        if (species == EnumSpecies.Greninja && (form == EnumGreninja.BASE || form == EnumGreninja.BATTLE_BOND) && specialTexture.id > 0 && species.hasSpecialTexture()) {
-            return "-special";
-        }
-
-        if(form != EnumNoForm.NoForm) {
-            return species.getFormEnum(form.getForm()).getSpriteSuffix();
-        }
-
-        if(EnumSpecies.mfSprite.contains(species)) {
-            return "-" + gender.name().toLowerCase();
-        }
-
-        if(specialTexture.id > 0 && species.hasSpecialTexture()) {
-            return "-special";
-        }
-
-        return "";
     }
 
     @AllArgsConstructor

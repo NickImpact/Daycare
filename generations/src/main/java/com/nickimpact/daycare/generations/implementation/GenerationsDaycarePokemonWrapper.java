@@ -1,6 +1,7 @@
 package com.nickimpact.daycare.generations.implementation;
 
 import com.google.common.collect.Maps;
+import com.nickimpact.daycare.generations.events.GenerationsLearnMoveEvent;
 import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
@@ -8,17 +9,15 @@ import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Ranch;
 import com.nickimpact.daycare.api.util.GsonUtils;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
-import com.nickimpact.daycare.sponge.events.DaycareEventImpl;
-import com.nickimpact.daycare.sponge.text.TextParsingUtils;
 import com.nickimpact.impactor.api.json.JsonTyping;
-import com.pixelmonmod.pixelmon.battles.attacks.Attack;
-import com.pixelmonmod.pixelmon.config.PixelmonEntityList;
-import com.pixelmonmod.pixelmon.database.DatabaseMoves;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Moveset;
-import com.pixelmonmod.pixelmon.entities.pixelmon.stats.evolution.types.LevelingEvolution;
-import com.pixelmonmod.pixelmon.enums.EnumPokemon;
+import com.pixelmongenerations.common.battle.attacks.Attack;
+import com.pixelmongenerations.common.entity.pixelmon.EntityPixelmon;
+import com.pixelmongenerations.common.entity.pixelmon.stats.Gender;
+import com.pixelmongenerations.common.entity.pixelmon.stats.Moveset;
+import com.pixelmongenerations.common.entity.pixelmon.stats.evolution.types.LevelingEvolution;
+import com.pixelmongenerations.core.config.PixelmonEntityList;
+import com.pixelmongenerations.core.database.DatabaseMoves;
+import com.pixelmongenerations.core.enums.EnumSpecies;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import org.spongepowered.api.Sponge;
@@ -113,7 +112,7 @@ public class GenerationsDaycarePokemonWrapper extends DaycarePokemonWrapper<Enti
 			if(evolution.to == null || evolution.to.name == null) continue;
 
 			if(evolution.level <= pokemon.getLvl().getLevel() + this.getGainedLevels() && evolution.conditions.stream().allMatch(condition -> condition.passes(pokemon))) {
-				DaycareEventImpl.Evolve event = new DaycareEventImpl.Evolve(ranch.getOwnerUUID(), pen, this, EnumPokemon.getFromNameAnyCase(evolution.to.name));
+				DaycareEventImpl.Evolve event = new DaycareEventImpl.Evolve(ranch.getOwnerUUID(), pen, this, EnumSpecies.getFromNameAnyCase(evolution.to.name));
 				if(!Sponge.getEventManager().post(event)) {
 					TextParsingUtils parser = SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils();
 
@@ -154,7 +153,7 @@ public class GenerationsDaycarePokemonWrapper extends DaycarePokemonWrapper<Enti
 		if(attacks != null) {
 			for(Attack attack : attacks) {
 				if(moveset.size() < 4) {
-					DaycareEventImpl.LearnMove event = new DaycareEventImpl.LearnMove(ranch.getOwnerUUID(), pen, this, attack.baseAttack);
+					GenerationsLearnMoveEvent event = new GenerationsLearnMoveEvent(ranch.getOwnerUUID(), pen, this, attack.baseAttack);
 					if(!Sponge.getEventManager().post(event)) {
 						moveset.add(attack);
 
@@ -162,7 +161,7 @@ public class GenerationsDaycarePokemonWrapper extends DaycarePokemonWrapper<Enti
 						Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> player.sendMessages(parser.fetchAndParseMsgs(player, MsgConfigKeys.LEARN_MOVE, tokens, variables)));
 					}
 				} else {
-					DaycareEventImpl.LearnMove event = new DaycareEventImpl.LearnMove(ranch.getOwnerUUID(), pen, this, attack.baseAttack, moveset.get(0).baseAttack);
+					GenerationsLearnMoveEvent event = new GenerationsLearnMoveEvent(ranch.getOwnerUUID(), pen, this, attack.baseAttack, moveset.get(0).baseAttack);
 					if(!Sponge.getEventManager().post(event)) {
 						Attack old = moveset.remove(0);
 						moveset.add(attack);

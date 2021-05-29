@@ -5,9 +5,10 @@ import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.sponge.implementation.SpongePen;
 import com.nickimpact.daycare.sponge.implementation.SpongeRanch;
 import com.nickimpact.daycare.sponge.utils.SpongeItemTypeUtil;
-import com.nickimpact.impactor.sponge.ui.SpongeIcon;
-import com.nickimpact.impactor.sponge.ui.SpongeLayout;
-import com.nickimpact.impactor.sponge.ui.SpongeUI;
+import com.nickimpact.daycare.sponge.utils.TextParser;
+import net.impactdev.impactor.sponge.ui.SpongeIcon;
+import net.impactdev.impactor.sponge.ui.SpongeLayout;
+import net.impactdev.impactor.sponge.ui.SpongeUI;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.entity.living.player.Player;
@@ -36,20 +37,20 @@ public class SettingsUI {
 
 	private final SpongeIcon MOVES = new SpongeIcon(ItemStack.builder()
 			.itemType(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:tm1"))
-			.add(Keys.DISPLAY_NAME, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, MsgConfigKeys.SETTINGS_MOVES_TITLE, null, null))
-			.add(Keys.ITEM_LORE, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(null, MsgConfigKeys.SETTINGS_MOVES_LORE, null, null))
+			.add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.SETTINGS_MOVES_TITLE)))
+			.add(Keys.ITEM_LORE, TextParser.parse(TextParser.read(MsgConfigKeys.SETTINGS_MOVES_LORE)))
 			.build()
 	);
 	private final SpongeIcon LEVEL = new SpongeIcon(ItemStack.builder()
 			.itemType(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:exp_share"))
-			.add(Keys.DISPLAY_NAME, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, MsgConfigKeys.SETTINGS_LEVEL_TITLE, null, null))
-			.add(Keys.ITEM_LORE, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(null, MsgConfigKeys.SETTINGS_LEVEL_LORE, null, null))
+			.add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.SETTINGS_LEVEL_TITLE)))
+			.add(Keys.ITEM_LORE, TextParser.parse(TextParser.read(MsgConfigKeys.SETTINGS_LEVEL_LORE)))
 			.build()
 	);
 	private final SpongeIcon EVOLVE = new SpongeIcon(ItemStack.builder()
 			.itemType(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:shiny_stone"))
-			.add(Keys.DISPLAY_NAME, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(null, MsgConfigKeys.SETTINGS_EVOLVE_TITLE, null, null))
-			.add(Keys.ITEM_LORE, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(null, MsgConfigKeys.SETTINGS_EVOLVE_LORE, null, null))
+			.add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.SETTINGS_EVOLVE_TITLE)))
+			.add(Keys.ITEM_LORE, TextParser.parse(TextParser.read(MsgConfigKeys.SETTINGS_EVOLVE_LORE)))
 			.build()
 	);
 
@@ -67,7 +68,7 @@ public class SettingsUI {
 	}
 
 	private SpongeUI createDisplay() {
-		return SpongeUI.builder().dimension(InventoryDimension.of(9, 6)).title(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.SETTINGS_UI_TITLE, null, null)).build();
+		return SpongeUI.builder().dimension(InventoryDimension.of(9, 6)).title(TextParser.parse(TextParser.read(MsgConfigKeys.SETTINGS_UI_TITLE))).build();
 	}
 
 	private SpongeLayout layout() {
@@ -79,19 +80,19 @@ public class SettingsUI {
 
 		SpongeIcon back = new SpongeIcon(ItemStack.builder()
 				.itemType(SpongeItemTypeUtil.getOrDefaultItemTypeFromID("pixelmon:eject_button"))
-				.add(Keys.DISPLAY_NAME, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.ITEM_BACK, null, null))
+				.add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.ITEM_BACK)))
 				.build());
 		back.addListener(clickable -> {
 			PenUI.builder().ranch(ranch).pen(pen).viewer(viewer).build().open();
 		});
 		slb.slot(back, 37);
 
-		SpongeIcon confirm = new SpongeIcon(ItemStack.builder().itemType(ItemTypes.DYE).add(Keys.DYE_COLOR, DyeColors.LIME).add(Keys.DISPLAY_NAME, SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(this.viewer, MsgConfigKeys.CONFIRM, null, null)).build());
+		SpongeIcon confirm = new SpongeIcon(ItemStack.builder().itemType(ItemTypes.DYE).add(Keys.DYE_COLOR, DyeColors.LIME).add(Keys.DISPLAY_NAME, TextParser.parse(TextParser.read(MsgConfigKeys.CONFIRM))).build());
 		confirm.addListener(clickable -> {
 			this.pen.getSettings().setCanLevel(this.display.getIcon(10).get() == ON);
 			this.pen.getSettings().setCanLearnMoves(this.display.getIcon(14).get() == ON);
 			this.pen.getSettings().setCanEvolve(this.display.getIcon(39).get() == ON);
-			this.viewer.sendMessages(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsgs(this.viewer, MsgConfigKeys.SETTINGS_APPLY, null, null));
+			this.viewer.sendMessages(TextParser.parse(TextParser.read(MsgConfigKeys.SETTINGS_APPLY)));
 			SpongeDaycarePlugin.getSpongeInstance().getService().getStorage().updateRanch(this.ranch);
 			PenUI.builder().ranch(ranch).pen(pen).viewer(viewer).build().open();
 		});

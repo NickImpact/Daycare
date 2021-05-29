@@ -30,8 +30,18 @@ dependencies {
     compile project(':api')
     compile project(':common')
     compile project(':sponge')
-    shadow 'org.spongepowered:spongeapi:7.1.0'
-    shadow 'reforged:server:7.2.1@Pixelmon-1.12.2-7.2.1-server.jar'
-    shadow 'io.github.nucleuspowered:nucleus-api:1.11.0-S7.1'
+    shadow fileTree(dir: '../../../Universal/Pixelmon Mixins/build/allJars', include: "*API*.jar")
+    shadow "net.impactdev.impactor:sponge:3.0.0-SNAPSHOT"
+    shadow 'net.impactdev.pixelmonbridge:reforged:1.0.0-SNAPSHOT'
+    shadow 'org.spongepowered:spongeapi:7.3.0'
+    shadow 'reforged:server:8.1.2@Pixelmon-1.12.2-8.1.2-server.jar'
     shadow 'co.aikar:acf-sponge:0.5.0-SNAPSHOT'
+}
+
+shadowJar {
+    relocate ('net.kyori.adventure', 'net.impactdev.impactor.relocations.adventure')
+    relocate ('net.kyori.examination', 'net.impactdev.impactor.relocations.examination')
+    relocate ('com.github.benmanes.caffeine', 'net.impactdev.impactor.relocations.caffeine')
+    relocate ('io.github.classgraph', 'net.impactdev.impactor.relocations.classgraph')
+    relocate ('org.mariuszgromada.math.mxparser', 'net.impactdev.impactor.relocations.mxparser')
 }

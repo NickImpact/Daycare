@@ -1,9 +1,9 @@
 package com.nickimpact.daycare.generations.ui;
 
-import com.pixelmonmod.pixelmon.config.PixelmonItems;
-import com.pixelmonmod.pixelmon.entities.pixelmon.EntityPixelmon;
-import com.pixelmonmod.pixelmon.storage.NbtKeys;
-import com.pixelmonmod.pixelmon.util.helpers.SpriteHelper;
+import com.pixelmongenerations.common.entity.pixelmon.EntityPixelmon;
+import com.pixelmongenerations.core.config.PixelmonItems;
+import com.pixelmongenerations.core.storage.NbtKeys;
+import com.pixelmongenerations.core.util.helper.SpriteHelper;
 import net.minecraft.nbt.NBTTagCompound;
 import org.spongepowered.api.item.inventory.ItemStack;
 
@@ -26,7 +26,7 @@ public class GenerationsIcons {
 					break;
 			}
 		} else {
-			if (pokemon.getIsShiny()) {
+			if (pokemon.isShiny()) {
 				nbt.setString(NbtKeys.SPRITE_NAME, "pixelmon:sprites/shinypokemon/" + idValue + SpriteHelper.getSpriteExtra(pokemon.getName(), pokemon.getForm(), pokemon.getGender(), pokemon.getSpecialTextureIndex()));
 			} else {
 				nbt.setString(NbtKeys.SPRITE_NAME, "pixelmon:sprites/pokemon/" + idValue + SpriteHelper.getSpriteExtra(pokemon.getName(), pokemon.getForm(), pokemon.getGender(), pokemon.getSpecialTextureIndex()));

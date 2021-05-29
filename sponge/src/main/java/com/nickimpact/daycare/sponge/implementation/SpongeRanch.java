@@ -3,7 +3,7 @@ package com.nickimpact.daycare.sponge.implementation;
 import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Ranch;
 import com.nickimpact.daycare.api.pens.Statistics;
-import com.nickimpact.impactor.api.json.JsonTyping;
+import net.impactdev.impactor.api.json.JsonTyping;
 
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +54,11 @@ public class SpongeRanch extends Ranch<SpongePen> {
 		public RanchBuilder stats(Statistics stats) {
 			this.stats = stats;
 			return this;
+		}
+
+		@Override
+		public RanchBuilder from(Ranch ranch) {
+			return null;
 		}
 
 		@Override

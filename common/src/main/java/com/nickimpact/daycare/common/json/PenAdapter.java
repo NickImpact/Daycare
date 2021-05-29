@@ -2,8 +2,8 @@ package com.nickimpact.daycare.common.json;
 
 import com.nickimpact.daycare.api.IDaycarePlugin;
 import com.nickimpact.daycare.api.pens.Pen;
-import com.nickimpact.impactor.api.json.Adapter;
-import com.nickimpact.impactor.api.json.Registry;
+import net.impactdev.impactor.api.json.Adapter;
+import net.impactdev.impactor.api.json.Registry;
 
 public class PenAdapter extends Adapter<Pen> {
 

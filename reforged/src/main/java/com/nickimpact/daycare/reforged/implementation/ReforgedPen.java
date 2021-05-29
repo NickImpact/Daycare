@@ -1,6 +1,8 @@
 package com.nickimpact.daycare.reforged.implementation;
 
+import com.google.gson.reflect.TypeToken;
 import com.nickimpact.daycare.api.breeding.BreedStage;
+import com.nickimpact.daycare.api.events.DaycareEvent;
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.api.pens.Settings;
 import com.nickimpact.daycare.reforged.DaycareReforged;
@@ -17,6 +19,7 @@ import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Moveset;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import com.pixelmonmod.pixelmon.enums.forms.IEnumForm;
 import com.pixelmonmod.pixelmon.util.helpers.BreedLogic;
+import net.impactdev.impactor.api.Impactor;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -186,6 +189,11 @@ public class ReforgedPen extends SpongePen<ReforgedDaycarePokemonWrapper, Pokemo
 		public ReforgedPenBuilder settings(Settings settings) {
 			this.settings = settings;
 			return this;
+		}
+
+		@Override
+		public PenBuilder from(Pen pen) {
+			return null;
 		}
 
 		@Override

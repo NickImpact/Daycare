@@ -25,15 +25,18 @@
 
 package com.nickimpact.daycare.common.storage;
 
+import com.google.common.collect.Lists;
 import com.nickimpact.daycare.api.IDaycarePlugin;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
 import com.nickimpact.daycare.common.storage.implementation.StorageImplementation;
 import com.nickimpact.daycare.common.storage.implementation.file.FlatfileStorage;
 import com.nickimpact.daycare.common.storage.implementation.sql.SqlImplementation;
-import com.nickimpact.impactor.api.storage.StorageType;
-import com.nickimpact.impactor.api.storage.sql.file.H2ConnectionFactory;
-import com.nickimpact.impactor.api.storage.sql.hikari.MariaDBConnectionFactory;
-import com.nickimpact.impactor.api.storage.sql.hikari.MySQLConnectionFactory;
+import net.impactdev.impactor.api.Impactor;
+import net.impactdev.impactor.api.dependencies.DependencyManager;
+import net.impactdev.impactor.api.storage.StorageType;
+import net.impactdev.impactor.api.storage.sql.file.H2ConnectionFactory;
+import net.impactdev.impactor.api.storage.sql.hikari.MariaDBConnectionFactory;
+import net.impactdev.impactor.api.storage.sql.hikari.MySQLConnectionFactory;
 
 import java.io.File;
 
@@ -54,6 +57,7 @@ public class StorageFactory {
         }
 
         this.plugin.getPluginLogger().info("Loading storage provider... [" + type.getName() + "]");
+        Impactor.getInstance().getRegistry().get(DependencyManager.class).loadStorageDependencies(Lists.newArrayList(type));
         storage = makeInstance(type);
         storage.init();
         return storage;
@@ -80,7 +84,7 @@ public class StorageFactory {
             case H2:
                 return new SqlImplementation(
                         this.plugin,
-                        new H2ConnectionFactory(this.plugin, new File("daycare").toPath().resolve("daycare-h2")),
+                        new H2ConnectionFactory(new File("daycare").toPath().resolve("daycare-h2")),
                         this.plugin.getConfiguration().get(ConfigKeys.SQL_TABLE_PREFIX)
                 );
             case JSON:

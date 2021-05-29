@@ -5,7 +5,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -67,7 +66,6 @@ public class ItemStackUtils {
 			}
 		}
 
-		@NotNull
 		private ItemStack buildStack(ItemStack item) {
 			ItemMeta meta = item.getItemMeta();
 			if (this.name != null) {

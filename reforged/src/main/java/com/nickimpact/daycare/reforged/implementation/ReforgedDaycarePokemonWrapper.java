@@ -1,16 +1,17 @@
 package com.nickimpact.daycare.reforged.implementation;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
+import com.google.gson.reflect.TypeToken;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
+import com.nickimpact.daycare.api.events.DaycareEvent;
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
 import com.nickimpact.daycare.api.pens.Pen;
 import com.nickimpact.daycare.api.pens.Ranch;
 import com.nickimpact.daycare.api.util.GsonUtils;
+import com.nickimpact.daycare.reforged.pokemon.placeholders.MoveUpdatePlaceholder;
 import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
-import com.nickimpact.daycare.sponge.events.DaycareEventImpl;
-import com.nickimpact.daycare.sponge.text.TextParsingUtils;
-import com.nickimpact.impactor.api.json.JsonTyping;
+import com.nickimpact.daycare.sponge.utils.TextParser;
 import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.battles.attacks.Attack;
@@ -18,16 +19,16 @@ import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Moveset;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.evolution.conditions.EvoCondition;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.evolution.types.LevelingEvolution;
-import com.pixelmonmod.pixelmon.enums.EnumSpecies;
+import me.nickimpact.pixelmonmixins.api.server.EvolutionPatch;
+import net.impactdev.impactor.api.Impactor;
+import net.impactdev.impactor.api.json.JsonTyping;
 import net.minecraft.nbt.NBTTagCompound;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.text.Text;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 @JsonTyping("daycare_reforged_sponge_pokemon_wrapper")
 public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon> {
@@ -58,8 +59,17 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 		ReforgedDaycarePokemonWrapper p2 = (ReforgedDaycarePokemonWrapper) pen.getAtPosition(2).get();
 		int id = p1.getDelegate().getGender() == Gender.Male ? 1 : 2;
 
-		DaycareEventImpl.Breed event = new DaycareEventImpl.Breed(ranch.getOwnerUUID(), pen, id == 1 ? p1 : p2, id == 1 ? p2 : p1, this);
-		if(!Sponge.getEventManager().post(event)) {
+		boolean event = Impactor.getInstance().getEventBus().post(
+				DaycareEvent.Breed.class,
+				new TypeToken<Pokemon>(){},
+				ranch.getOwnerUUID(),
+				pen,
+				(id == 1 ? p1 : p2).getDelegate(),
+				(id == 1 ? p2 : p1).getDelegate(),
+				this.getDelegate()
+		);
+
+		if(!event) {
 			pen.setEgg(this);
 		}
 	}
@@ -81,8 +91,17 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 		}
 
 		if(LocalDateTime.now().isAfter(lastLevel.plusSeconds(SpongeDaycarePlugin.getSpongeInstance().getConfig().get(ConfigKeys.LVL_WAIT_TIME)))) {
-			DaycareEventImpl.LevelUp event = new DaycareEventImpl.LevelUp(ranch.getOwnerUUID(), pen, this, this.getDelegate().getLevel() + this.getGainedLevels() + 1);
-			if(!Sponge.getEventManager().post(event)) {
+			boolean event = Impactor.getInstance().getEventBus().post(
+					DaycareEvent.LevelUp.class,
+					new TypeToken<Pokemon>(){},
+					ranch.getOwnerUUID(),
+					pen,
+					this.getDelegate(),
+					this.getDelegate().getLevel() + this.getGainedLevels() + 1,
+					this.getGainedLevels()
+			);
+
+			if(!event) {
 				this.setLastLevelApplyTime(LocalDateTime.now());
 				this.incrementGainedLevels();
 
@@ -93,7 +112,7 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 					}
 				}
 
-				if (Sponge.getPluginManager().isLoaded("pmixins")) {
+				if (Sponge.getPluginManager().isLoaded("pixelmonmixins")) {
 					if (pen.getSettings().canEvolve()) {
 						if (evolve(ranch, pen)) {
 							if (pen.getSettings().canLearnMoves()) {
@@ -114,9 +133,9 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 	}
 
 	private static final BiPredicate<Pokemon, List<EvoCondition>> evoConditionCheck = (pokemon, conditions) -> conditions.stream().allMatch(condition -> {
-//		if (condition instanceof EvolutionPatch) {
-//			return ((EvolutionPatch) condition).passes(pokemon);
-//		}
+		if (condition instanceof EvolutionPatch) {
+			return ((EvolutionPatch) condition).passes(pokemon);
+		}
 
 		return false;
 	});
@@ -133,22 +152,23 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 			if(evolution.to == null || evolution.to.name == null) continue;
 
 			if(evolution.getLevel() <= pokemon.getLevel() + this.getGainedLevels() && evoConditionCheck.test(pokemon, evolution.conditions)) {
-				DaycareEventImpl.Evolve event = new DaycareEventImpl.Evolve(ranch.getOwnerUUID(), pen, this, EnumSpecies.getFromNameAnyCase(evolution.to.name));
-				if(!Sponge.getEventManager().post(event)) {
-					TextParsingUtils parser = SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils();
-					Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
+				boolean event = Impactor.getInstance().getEventBus().post(
+						DaycareEvent.Evolve.class,
+						new TypeToken<Pokemon>(){},
+						ranch.getOwnerUUID(),
+						pen,
+						this.getDelegate(),
+						evolution.to.name
+				);
 
-					String prior = pokemon.getSpecies().getPokemonName();
-					tokens.put("pokemon_before_evo", src -> Optional.of(Text.of(prior)));
-					tokens.put("pokemon_after_evo", src -> Optional.of(Text.of(evolution.to.name)));
+				if(!event) {
+					List<Supplier<Object>> sources = Lists.newArrayList();
+					sources.add(this::getDelegate);
+					sources.add(() -> this);
 
-					Map<String, Object> variables = Maps.newHashMap();
-					variables.put("pokemon", this.getDelegate());
-					variables.put("wrapper", this);
-
+					Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> player.sendMessages(TextParser.parse(TextParser.read(MsgConfigKeys.EVOLVE), sources)));
 					pokemon.evolve(evolution.to);
 					this.delegate = pokemon;
-					Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> player.sendMessages(parser.fetchAndParseMsgs(player, MsgConfigKeys.EVOLVE, tokens, variables)));
 
 					return true;
 				}
@@ -160,37 +180,55 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 
 	@Override
 	public boolean learnMove(Ranch ranch, Pen pen) {
-		TextParsingUtils parser = SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils();
 		Moveset moveset = this.getDelegate().getMoveset();
 		LinkedHashMap<Integer, ArrayList<Attack>> levelupMoves = this.getDelegate().getBaseStats().levelUpMoves;
 		int currentLvl = this.getGainedLevels() + this.getDelegate().getLevel();
 
-		Map<String, Function<CommandSource, Optional<Text>>> tokens = Maps.newHashMap();
-
-		Map<String, Object> variables = Maps.newHashMap();
-		variables.put("pokemon", this.getDelegate());
-		variables.put("wrapper", this);
+		List<Supplier<Object>> sources = Lists.newArrayList();
+		sources.add(this::getDelegate);
+		sources.add(() -> this);
 
 		ArrayList<Attack> attacks = levelupMoves.get(currentLvl);
 		if(attacks != null) {
 			for(Attack attack : attacks) {
+				List<Supplier<Object>> sourcesDeep = Lists.newArrayList(sources);
+				sourcesDeep.add(() -> new MoveUpdatePlaceholder.MoveUpdateContext(attack.getActualMove(), MoveUpdatePlaceholder.MoveUpdateContext.Context.NEW));
+
 				if(moveset.size() < 4) {
-					DaycareEventImpl.LearnMove event = new DaycareEventImpl.LearnMove(ranch.getOwnerUUID(), pen, this, attack.getActualMove());
-					if(!Sponge.getEventManager().post(event)) {
+					boolean event = Impactor.getInstance().getEventBus().post(
+							DaycareEvent.LearnMove.class,
+							new TypeToken<Pokemon>(){},
+							ranch.getOwnerUUID(),
+							pen,
+							this.getDelegate(),
+							attack.getActualMove().getLocalizedName(),
+							null
+					);
+
+					if(!event) {
 						moveset.add(attack);
 
-						tokens.put("pokemon_new_move", src -> Optional.of(Text.of(attack.getActualMove().getTranslatedName().getUnformattedText())));
-						Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> player.sendMessages(parser.fetchAndParseMsgs(player, MsgConfigKeys.LEARN_MOVE, tokens, variables)));
+						Sponge.getServer().getPlayer(ranch.getOwnerUUID())
+								.ifPresent(player -> player.sendMessages(TextParser.parse(TextParser.read(MsgConfigKeys.LEARN_MOVE), sourcesDeep)));
 					}
 				} else {
-					DaycareEventImpl.LearnMove event = new DaycareEventImpl.LearnMove(ranch.getOwnerUUID(), pen, this, attack.getActualMove(), moveset.get(0).getActualMove());
-					if(!Sponge.getEventManager().post(event)) {
+					boolean event = Impactor.getInstance().getEventBus().post(
+							DaycareEvent.LearnMove.class,
+							new TypeToken<Pokemon>(){},
+							ranch.getOwnerUUID(),
+							pen,
+							this.getDelegate(),
+							attack.getActualMove().getLocalizedName(),
+							moveset.get(0).getActualMove().getLocalizedName()
+					);
+
+					if(!event) {
 						Attack old = moveset.remove(0);
 						moveset.add(attack);
 
-						tokens.put("pokemon_old_move", src -> Optional.of(Text.of(old.getActualMove().getTranslatedName().getUnformattedText())));
-						tokens.put("pokemon_new_move", src -> Optional.of(Text.of(attack.getActualMove().getTranslatedName().getUnformattedText())));
-						Sponge.getServer().getPlayer(ranch.getOwnerUUID()).ifPresent(player -> player.sendMessages(parser.fetchAndParseMsgs(player, MsgConfigKeys.LEARN_MOVE_REPLACE, tokens, variables)));
+						sourcesDeep.add(() -> new MoveUpdatePlaceholder.MoveUpdateContext(old.getActualMove(), MoveUpdatePlaceholder.MoveUpdateContext.Context.OLD));
+						Sponge.getServer().getPlayer(ranch.getOwnerUUID())
+								.ifPresent(player -> player.sendMessages(TextParser.parse(TextParser.read(MsgConfigKeys.LEARN_MOVE_REPLACE), sourcesDeep)));
 					}
 
 				}
@@ -222,6 +260,11 @@ public class ReforgedDaycarePokemonWrapper extends DaycarePokemonWrapper<Pokemon
 		public ReforgedDaycarePokemonWrapperBuilder lastLvl(LocalDateTime lastLvl) {
 			this.lastLvl = lastLvl;
 			return this;
+		}
+
+		@Override
+		public DaycarePokemonWrapperBuilder from(DaycarePokemonWrapper daycarePokemonWrapper) {
+			return null;
 		}
 
 		@Override

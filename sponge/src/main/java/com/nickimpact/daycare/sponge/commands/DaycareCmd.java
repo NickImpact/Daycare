@@ -1,42 +1,57 @@
 package com.nickimpact.daycare.sponge.commands;
 
-import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.*;
 import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
+import com.nickimpact.daycare.sponge.commands.admin.DaycareAdminCmd;
+import com.nickimpact.daycare.sponge.commands.annotations.Alias;
+import com.nickimpact.daycare.sponge.commands.annotations.Permission;
 import com.nickimpact.daycare.sponge.configuration.MsgConfigKeys;
 import com.nickimpact.daycare.sponge.ui.RanchUI;
+import com.nickimpact.daycare.sponge.utils.TextParser;
+import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandResult;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
 
-@CommandAlias("daycare")
-@CommandPermission("daycare.command.daycare.base")
-public class DaycareCmd extends BaseCommand {
+import java.util.Optional;
 
-	@Default
+@Alias("daycare")
+@Permission("daycare.command.daycare.base")
+public class DaycareCmd extends DaycareCmdExecutor {
+
+	public DaycareCmd(SpongeDaycarePlugin plugin) {
+		super(plugin);
+	}
+
 	public void execute(Player player) {
 		new RanchUI(player).open();
 	}
 
-	@Subcommand("admin")
-	@CommandPermission("daycare.command.admin.base")
-	public class Admin extends BaseCommand {
+	@Override
+	public Optional<Text> getDescription() {
+		return Optional.empty();
+	}
 
-		@Default
-		public void onNoArgs(Player player) {
-			player.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().parse("{{daycare_prefix}} Usage: /daycare admin <addnpc <npc name> | deletenpc>", player, null, null));
-		}
+	@Override
+	public CommandElement[] getArguments() {
+		return new CommandElement[0];
+	}
 
-		@Subcommand("addnpc|anpc")
-		@CommandPermission("daycare.command.admin.addnpc")
-		@Syntax("<name>")
-		public void addNPC(Player player, String npcName) {
-			SpongeDaycarePlugin.getSpongeInstance().getService().getNPCManager().addNPCAdder(player.getUniqueId(), npcName);
-			player.sendMessage(SpongeDaycarePlugin.getSpongeInstance().getTextParsingUtils().fetchAndParseMsg(player, MsgConfigKeys.CMD_ADDNPC_RIGHTCLICK_NOTICE, null, null));
-		}
+	@Override
+	public DaycareCmdExecutor[] getSubcommands() {
+		return new DaycareCmdExecutor[] {
+				new DaycareAdminCmd(this.plugin)
+		};
+	}
 
-		@Subcommand("deletenpc|dnpc")
-		@CommandPermission("daycare.command.admin.deletenpc")
-		public void deleteNPC(Player player) {
-			SpongeDaycarePlugin.getSpongeInstance().getService().getNPCManager().removeRemover(player.getUniqueId());
+	@Override
+	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+		if(src instanceof Player) {
+			new RanchUI((Player) src).open();
+			return CommandResult.success();
 		}
+		throw new CommandException(Text.of("You must be a player to use this command"));
 	}
 }

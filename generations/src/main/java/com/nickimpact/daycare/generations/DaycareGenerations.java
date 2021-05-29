@@ -3,6 +3,7 @@ package com.nickimpact.daycare.generations;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
+import com.nickimpact.daycare.generations.listeners.GenerationsNPCInteractListener;
 import com.nickimpact.daycare.sponge.PluginBootstrap;
 import com.nickimpact.daycare.sponge.SpongeDaycarePlugin;
 import com.nickimpact.daycare.api.pens.DaycarePokemonWrapper;
@@ -24,8 +25,10 @@ import com.nickimpact.impactor.api.storage.dependencies.classloader.PluginClassL
 import com.nickimpact.impactor.sponge.SpongeImpactorPlugin;
 import lombok.Getter;
 import org.slf4j.Logger;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
@@ -81,9 +84,10 @@ public class DaycareGenerations extends SpongeDaycarePlugin {
         this.getService().getBuilderRegistry().register(PenUI.PenUIBuilder.class, GenerationsPenUI.GenerationsPenUIBuilder.class);
     }
 
-    @Listener
+    @Listener(order = Order.LATE)
     public void onInit(GameInitializationEvent event) {
         bootstrap.init();
+        Sponge.getEventManager().registerListeners(this, new GenerationsNPCInteractListener());
         new PokemonTokens().getTokens().forEach(tokens::register);
     }
 

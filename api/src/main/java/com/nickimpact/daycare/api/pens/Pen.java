@@ -1,10 +1,13 @@
 package com.nickimpact.daycare.api.pens;
 
 
+import com.google.gson.reflect.TypeToken;
 import com.nickimpact.daycare.api.breeding.BreedStage;
 import com.nickimpact.daycare.api.configuration.ConfigKeys;
+import com.nickimpact.daycare.api.events.DaycareEvent;
 import com.nickimpact.daycare.api.util.PluginInstance;
-import com.nickimpact.impactor.api.building.Builder;
+import net.impactdev.impactor.api.Impactor;
+import net.impactdev.impactor.api.utilities.Builder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -183,10 +186,10 @@ public abstract class Pen<T extends DaycarePokemonWrapper<?>, E> {
 	}
 
 	public static PenBuilder builder() {
-		return PluginInstance.getPlugin().getService().getBuilderRegistry().createFor(PenBuilder.class);
+		return Impactor.getInstance().getRegistry().createBuilder(PenBuilder.class);
 	}
 
-	public interface PenBuilder extends Builder<Pen> {
+	public interface PenBuilder extends Builder<Pen, PenBuilder> {
 
 		PenBuilder identifier(UUID uuid);
 
